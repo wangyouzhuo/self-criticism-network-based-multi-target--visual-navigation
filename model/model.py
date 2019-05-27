@@ -18,10 +18,6 @@ class ACNet(object):
                     self.s = tf.placeholder(tf.float32, [None, self.dim_s], 'State')
                     self.t = tf.placeholder(tf.float32, [None, self.dim_s], 'Target')
 
-                    self.adv      = tf.placeholder(tf.float32, [None, ], 'Advantage')
-                    self.spe_prob = tf.placeholder(tf.float32, [None,self.dim_a], 'Special_net_prob')
-                    self.kl_beta  = tf.placeholder(tf.float32, [None,], 'KL_BETA')
-
                     self.global_a_params,self.global_c_params = self._build_global_params_dict(scope)
                     self.special_a_params_dict,self.special_c_params_dict = self._build_special_params_dict(scope)
 
@@ -38,18 +34,20 @@ class ACNet(object):
                     self.state_v_reg      = tf.placeholder(tf.float32, [None, 1], 'state_v_reg')
                     self.t = tf.placeholder(tf.float32, [None, self.dim_s], 'T')
 
+                    self.adv      = tf.placeholder(tf.float32, [None, ], 'Advantage')
+                    self.kl_beta  = tf.placeholder(tf.float32, [None,], 'KL_BETA')
+
                     self.OPT_A = tf.train.RMSPropOptimizer(LR_A, name='RMSPropA')
-                    self.OPT_C = tf.train.RMSPropOptimizer(LR_C, name='RMSPropC')
-                    self.OPT_REG_A = tf.train.RMSPropOptimizer(LR_REG_A, name='REG_RMSPropA')
-                    self.OPT_REG_C = tf.train.RMSPropOptimizer(LR_REG_C, name='REG_RMSPropC')
 
-                    self.global_a_prob ,self.global_v ,self.global_a_params ,self.global_c_params\
-                        = self._build_global_net(scope)
+                    self.OPT_SPE_A = tf.train.RMSPropOptimizer(LR_REG_A, name='SPE_RMSPropA')
+                    self.OPT_SPE_C = tf.train.RMSPropOptimizer(LR_REG_C, name='SPE_RMSPropC')
 
+                    # target_general_network
+                    self.global_a_prob ,self.global_a_params = self._build_global_net(scope)
+
+                    # target_special_network
                     self.special_a_prob,self.special_v,self.special_a_params,self.special_c_params \
                         = self._build_special_net(scope)
-
-                    self.q_value,self.special_q_params = self._build_q_net(scope)
 
                     self._prepare_global_loss(scope)
 
@@ -128,7 +126,8 @@ class ACNet(object):
             b_actor = generate_fc_bias(shape=[self.dim_a], name='global_b_a')
             prob = tf.nn.softmax(tf.matmul(scene_layer, w_actor) + b_actor)
 
-            a_params = [w_encode, b_encode,w_fusion, b_fusion, w_scene , b_scene ,w_actor , b_actor ]
+            a_params = [w_encode, b_encode,w_fusion, b_fusion,
+                        w_scene , b_scene ,w_actor , b_actor ]
 
             return prob , a_params
 
@@ -217,8 +216,8 @@ class ACNet(object):
             self.update_special_a_dict, self.update_special_c_dict = dict(), dict()
             self.update_special_q_dict = dict()
             for key in TARGET_ID_LIST:
-                kv_a = {key: self.OPT_REG_A.apply_gradients(list(zip(self.special_a_grads , self.global_AC.special_a_params_dict[key])))}
-                kv_c = {key: self.OPT_REG_C.apply_gradients(list(zip(self.special_c_grads , self.global_AC.special_c_params_dict[key])))}
+                kv_a = {key: self.OPT_SPE_A.apply_gradients(list(zip(self.special_a_grads , self.global_AC.special_a_params_dict[key])))}
+                kv_c = {key: self.OPT_SPE_C.apply_gradients(list(zip(self.special_c_grads , self.global_AC.special_c_params_dict[key])))}
                 self.update_special_a_dict.update(kv_a)
                 self.update_special_c_dict.update(kv_c)
 
@@ -240,6 +239,10 @@ class ACNet(object):
 
 
     def compute_kl(self,feed_dict):
+        p_target = tf.stop_gradient(self.special_a_prob)
+        p_update = self.global_a_prob
+        self.kl = self.KL_divergence(p_stable=p_target, p_advance=p_update)
+        self.kl_mean = tf.reduce_mean(self.kl)
         kl = self.session.run(self.kl_mean,feed_dict=feed_dict)
         return kl
 
@@ -248,11 +251,11 @@ class ACNet(object):
                           self.update_special_c_dict[target_id]],feed_dict)
 
     def update_global(self,feed_dict):
-        self.session.run([self.update_global_a_op, self.update_global_c_op], feed_dict)  # local grads applies to global net
+        self.session.run([self.update_global_a_op], feed_dict)  # local grads applies to global net
 
 
     def pull_global(self):
-        self.session.run([self.pull_a_params_global, self.pull_c_params_global])
+        self.session.run([self.pull_a_params_global])
 
 
     def pull_special(self,target_id):  # run by a local
@@ -272,8 +275,7 @@ class ACNet(object):
 
     def load_weight(self,target_id):
         self.session.run([self.pull_a_params_special_dict[target_id],
-                          self.pull_c_params_special_dict[target_id],
-                          self.pull_q_params_special_dict[target_id]])
+                          self.pull_c_params_special_dict[target_id]])
 
 
     def KL_divergence(self,p_stable,p_advance):
