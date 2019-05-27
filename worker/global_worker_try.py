@@ -40,26 +40,29 @@ class Glo_Worker(Worker):
                 buffer_t.append(t)
                 buffer_r.append(r)
                 if step_in_episode % UPDATE_GLOBAL_ITER == 0 or done:  # update global and assign to local net
+                    buffer_advantage = [0]*len(buffer_v)
+                    buffer_v = self.AC.get_special_value(feed_dict={self.AC.s: buffer_s})
                     if done:
-                        v = 0  # terminal
-                    else:
-                        v = self.AC.get_special_value(feed_dict={self.AC.s: s_[np.newaxis, :]})[0, 0]
-                        # v_global = self.session.run(self.AC.global_v,
-                        #     {self.AC.s: s_[np.newaxis, :], self.AC.t: t[np.newaxis, :]})[0, 0]
-                    for r in buffer_r[::-1]:  # reverse buffer r
-                        q = r + GAMMA * v
-                        buffer_q.append(q)
-                    buffer_q.reverse()
+                        buffer_v[-1] = 0  # terminal
+                    buffer_v_next = self.AC.get_special_value(feed_dict={self.AC.s: buffer_s_next})
+                    for i in len(buffer_r):
+                        v_next = buffer_v_next[i]
+                        reward = buffer_r[i]
+                        q = reward + GAMMA*v_next
+                        advantage = q-buffer_v[i]
+                        buffer_advantage[i] = advantage
+
                     buffer_s, buffer_a, buffer_t = np.vstack(buffer_s), np.array(buffer_a), np.vstack(buffer_t)
-                    buffer_v_global,buffer_s_reg = np.vstack(buffer_v_global),np.vstack(buffer_s_reg)
+                    buffer_advantage = np.vstack(buffer_advantage)
                     feed_dict = {
                         self.AC.s: buffer_s,
                         self.AC.a: buffer_a,
                         self.AC.t: buffer_t,
-                        self.AC.kl_beta:[0.0001],
+                        self.AC.kl_beta:[0.0000],
+                        self.AC.adv:buffer_advantage
                        }
                     self.AC.update_global(feed_dict)
-                    buffer_s, buffer_a, buffer_r, buffer_t,buffer_s_reg = [], [], [], [],[]
+                    buffer_s, buffer_a, buffer_r, buffer_t,buffer_s_next = [], [], [], [],[]
                     self.AC.pull_global()
                 s = s_
                 step_in_episode += 1
