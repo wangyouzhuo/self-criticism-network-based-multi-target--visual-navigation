@@ -12,7 +12,8 @@ class Glo_Worker(Worker):
 
     def work(self):
         buffer_s, buffer_a, buffer_r, buffer_t = [], [], [], []
-        buffer_s_reg = []
+        buffer_s_next = []
+        buffer_q = []
         while not self.coord.should_stop() and _get_train_count() < MAX_GLOBAL_EP:
             EPI_COUNT = _add_train_count()
             s, t = self.env.reset_env()
@@ -22,10 +23,6 @@ class Glo_Worker(Worker):
             while True:
                 self.AC.load_weight(target_id=target_id)
                 a,global_prob  = self.AC.glo_choose_action(s, t)
-                # q_v_list = [self.AC.q_value(s,a) for a in range(self.N_A)]
-                q_v_list = list(map(lambda a:self.AC.get_q_value(s,a),range(0,self.N_A)))
-                s_v_reg  = sum(q_v_list*global_prob)
-
                 '''
                 _,special_prob = self.AC.spe_choose_action(s, t)
                 dict  = {
@@ -38,30 +35,29 @@ class Glo_Worker(Worker):
                 s_, r, done, info = self.env.take_action(a)
                 ep_r += r
                 buffer_s.append(s)
+                buffer_s_next.append(s_)
                 buffer_a.append(a)
                 buffer_t.append(t)
                 buffer_r.append(r)
-                buffer_s_reg.append(s_v_reg)
                 if step_in_episode % UPDATE_GLOBAL_ITER == 0 or done:  # update global and assign to local net
                     if done:
-                        v_global = 0  # terminal
+                        v = 0  # terminal
                     else:
-                        v_global = self.session.run(self.AC.global_v,
-                            {self.AC.s: s_[np.newaxis, :], self.AC.t: t[np.newaxis, :]})[0, 0]
-                    buffer_v_global = []
+                        v = self.AC.get_special_value(feed_dict={self.AC.s: s_[np.newaxis, :]})[0, 0]
+                        # v_global = self.session.run(self.AC.global_v,
+                        #     {self.AC.s: s_[np.newaxis, :], self.AC.t: t[np.newaxis, :]})[0, 0]
                     for r in buffer_r[::-1]:  # reverse buffer r
-                        v_global = r + GAMMA * v_global
-                        buffer_v_global.append(v_global)
-                    buffer_v_global.reverse()
+                        q = r + GAMMA * v
+                        buffer_q.append(q)
+                    buffer_q.reverse()
                     buffer_s, buffer_a, buffer_t = np.vstack(buffer_s), np.array(buffer_a), np.vstack(buffer_t)
                     buffer_v_global,buffer_s_reg = np.vstack(buffer_v_global),np.vstack(buffer_s_reg)
                     feed_dict = {
                         self.AC.s: buffer_s,
                         self.AC.a: buffer_a,
-                        self.AC.global_v_target: buffer_v_global,
                         self.AC.t: buffer_t,
-                        self.AC.state_v_reg:buffer_s_reg,
-                        self.AC.T: 1 }
+                        self.AC.kl_beta:[0.0001],
+                       }
                     self.AC.update_global(feed_dict)
                     buffer_s, buffer_a, buffer_r, buffer_t,buffer_s_reg = [], [], [], [],[]
                     self.AC.pull_global()

@@ -29,18 +29,16 @@ class ACNet(object):
                     self.s = tf.placeholder(tf.float32, [None, self.dim_s], 'State')
                     self.a = tf.placeholder(tf.int32, [None, ], 'Action')
 
-                    self.global_v_target  = tf.placeholder(tf.float32, [None, 1], 'global_V_target')
                     self.special_v_target = tf.placeholder(tf.float32, [None, 1], 'special_V_target')
-                    self.state_v_reg      = tf.placeholder(tf.float32, [None, 1], 'state_v_reg')
                     self.t = tf.placeholder(tf.float32, [None, self.dim_s], 'T')
 
                     self.adv      = tf.placeholder(tf.float32, [None, ], 'Advantage')
                     self.kl_beta  = tf.placeholder(tf.float32, [None,], 'KL_BETA')
 
-                    self.OPT_A = tf.train.RMSPropOptimizer(LR_A, name='RMSPropA')
+                    self.OPT_A = tf.train.RMSPropOptimizer(LR_A, name='Glo_RMSPropA')
 
-                    self.OPT_SPE_A = tf.train.RMSPropOptimizer(LR_REG_A, name='SPE_RMSPropA')
-                    self.OPT_SPE_C = tf.train.RMSPropOptimizer(LR_REG_C, name='SPE_RMSPropC')
+                    self.OPT_SPE_A = tf.train.RMSPropOptimizer(LR_REG_A, name='Spe_RMSPropA')
+                    self.OPT_SPE_C = tf.train.RMSPropOptimizer(LR_REG_C, name='Spe_RMSPropC')
 
                     # target_general_network
                     self.global_a_prob ,self.global_a_params = self._build_global_net(scope)
@@ -284,7 +282,9 @@ class ACNet(object):
         return tf.clip_by_value(tf.distributions.kl_divergence(X, Y), clip_value_min=0.0, clip_value_max=10)
 
 
-    def get_q_value(self,s,a):
-        s,a = np.array([s]),np.array([a])
-        q = self.session.run(self.q_value,feed_dict={self.s:s,self.a:a})[0,0]
-        return q
+    def get_special_value(self,feed_dict):
+        special_value = self.session.run(self.special_v,feed_dict)
+        return special_value
+
+
+
