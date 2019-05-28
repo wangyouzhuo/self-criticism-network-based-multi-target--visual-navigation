@@ -47,7 +47,7 @@ def _length_evaluate_list():
 
 def _evaluate_list_mean():
     global ROA_LIST, REWARD_LIST
-    print("ROA_LIST : ",ROA_LIST)
+    # print("ROA_LIST : ",ROA_LIST)
     return average(ROA_LIST),average(REWARD_LIST)
 
 def _reset_evaluate_list():
