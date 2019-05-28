@@ -2,9 +2,9 @@ from worker.global_worker_try import *
 from worker.special_worker import *
 import threading
 import datetime
-from global_episode_count import _init_train_count,_get_result_mean_list
-from global_episode_count import _init_show_list,_get_show_list,_init_roa_list
-from model_try import *
+from utils.global_episode_count import _init_train_count,_get_result_mean_list
+from utils.global_episode_count import _init_show_list,_get_show_list,_init_roa_list
+from model.model import *
 from config.params import *
 from config.constant import *
 import matplotlib.pyplot as plt

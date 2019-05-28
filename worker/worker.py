@@ -1,9 +1,9 @@
-from  model_try import *
+from  model.model import *
 from env.THOR_LOADER import *
-from global_episode_count import _get_evaluate_count,_add_evaluate_count,_init_evaluate_count,\
+from utils.global_episode_count import _get_evaluate_count,_add_evaluate_count,_init_evaluate_count,\
     _evaluate_list_mean,_reset_evaluate_count
-from global_episode_count import _init_evaluate_list,_reset_evaluate_list,_append_evaluate_list,_length_evaluate_list
-from global_episode_count import _init_result_mean_list,_append_result_mean_list,_reset_result_mean_list
+from utils.global_episode_count import _init_evaluate_list,_reset_evaluate_list,_append_evaluate_list,_length_evaluate_list
+from utils.global_episode_count import _init_result_mean_list,_append_result_mean_list,_reset_result_mean_list
 import threading
 from config.params import *
 from config.constant import *
