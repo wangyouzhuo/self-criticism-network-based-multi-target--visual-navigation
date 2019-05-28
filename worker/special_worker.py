@@ -33,7 +33,7 @@ class Spe_Worker(Worker):
                     if done:
                         v_special = 0  # terminal
                     else:
-                        v_special =self.session.run(self.AC.special_v, {self.AC.s: s_[np.newaxis, :], self.AC.t: t[np.newaxis, :]})[0, 0]
+                        v_special =self.session.run(self.AC.special_v, {self.AC.s: s_[np.newaxis, :]})[0, 0]
                     buffer_v_special = []
                     for r in buffer_r[::-1]:  # reverse buffer r
                         v_special = r + GAMMA * v_special
@@ -55,7 +55,7 @@ class Spe_Worker(Worker):
                         self.AC.s: buffer_s,
                         self.AC.a: buffer_a,
                         self.AC.special_v_target: buffer_v_special,
-                        self.AC.t: buffer_t}
+                        }
                     self.AC.update_special(feed_dict,target_id)
                     buffer_s, buffer_a, buffer_r, buffer_t = [], [], [], []
                     buffer_v_special = []

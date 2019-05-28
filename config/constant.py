@@ -13,7 +13,7 @@ UPDATE_GLOBAL_ITER   = 10
 
 EVALUATE_ITER        = 100
 
-N_EVALUATERS         = 20
+N_EVALUATERS         = 40
 N_WORKERS            = 40
 
 device = '/gpu:0'

@@ -157,8 +157,8 @@ def _decrease_kl_beta():
         GLOBAL_KL_BETA = 0
 
 def _get_kl_beta():
-    global GLOBAL_STEPS_COUNT
-    return GLOBAL_STEPS_COUNT
+    global GLOBAL_KL_BETA
+    return GLOBAL_KL_BETA
 
 
 

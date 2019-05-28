@@ -22,7 +22,7 @@ if __name__ == "__main__":
     N_S,N_A = 2048,4
 
     with tf.device(device):
-        GLOBAL_AC = ACNet('Global_Net',session=SESS,N_A=N_A,N_S=N_S,device=device)  # we only need its params
+        GLOBAL_AC = ACNet('Global_Net',session=SESS,N_A=N_A,N_S=N_S,type=None,device=device)  # we only need its params
         workers = []
         # Create worker
         for i in range(int(N_WORKERS * 0.5)):

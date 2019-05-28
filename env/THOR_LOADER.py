@@ -208,6 +208,8 @@ def load_thor_env(scene_name,random_start,random_terminal,
         'whe_use_image':whe_use_image,
         'whether_show':whe_show,
         'h5_file_path': ROOT_PATH + '/data/%s.h5'%scene_name,
+        #'h5_file_path': data_path,
+
 
     }
     env = THORDiscreteEnvironment(config)

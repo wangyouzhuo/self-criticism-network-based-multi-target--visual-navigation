@@ -52,6 +52,8 @@ class Glo_Worker(Worker):
                     if kl_mean<KL_MIN:
                         _decrease_kl_beta()
                     kl_beta = _get_kl_beta()
+                    print("kl_beta: %6s   kl_mean:%6s"%(round(kl_beta,4),round(kl_mean,4)))
+                    _reset_kl_list()
 
                 if step_in_episode % UPDATE_GLOBAL_ITER == 0 or done:  # update global and assign to local net
                     buffer_v = self.AC.get_special_value(feed_dict={self.AC.s: buffer_s})
@@ -72,8 +74,8 @@ class Glo_Worker(Worker):
                         self.AC.s: buffer_s,
                         self.AC.a: buffer_a,
                         self.AC.t: buffer_t,
-                        #self.AC.kl_beta:[kl_beta],
-                        self.AC.kl_beta:[0.0],
+                        self.AC.kl_beta:[kl_beta],
+                        #self.AC.kl_beta:[0.0],
                         self.AC.adv:buffer_advantage
                        }
                     self.AC.update_global(feed_dict)
@@ -88,14 +90,13 @@ class Glo_Worker(Worker):
                     else:
                         roa = 0.000
                     _append_result_mean_list(roa,ep_r)
-                    if EPI_COUNT%100 == 0:
+                    if EPI_COUNT%200 == 0:
                         roa_mean,reward_mean = _get_result_mean_list()
-                        print('--------------------------------------------------------------------------------------------------')
-                        print("Train!     Epi:%6s || Glo_Roa:%5s  || Glo_Reward:%5s" % (EPI_COUNT, round(roa_mean, 3), round(reward_mean, 2)))
                         _reset_result_mean_list()
                     # if EPI_COUNT>100 and EPI_COUNT % EVALUATE_ITER == 0:
                         roa_eva,reward_eva = self.evaluate()
-                        print("Evaluate!  Epi:%5s || Roa_mean:%6s || Reward_mean:%7s "%(EPI_COUNT,round(roa_eva,4),round(reward_eva,3)))
+                        print("Train!     Epi:%6s || Glo_Roa:%6s  || Glo_Reward:%7s         Evaluate!  Epi:%6s || Roa_mean:%6s || Reward_mean:%7s "
+                              %(EPI_COUNT, round(roa_mean, 3), round(reward_mean, 2),EPI_COUNT,round(roa_eva,4),round(reward_eva,3)))
                     break
 
     def evaluate(self):

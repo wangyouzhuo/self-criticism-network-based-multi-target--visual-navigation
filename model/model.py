@@ -30,8 +30,8 @@ class ACNet(object):
                     self.a = tf.placeholder(tf.int32, [None, ], 'Action')
                     self.special_v_target = tf.placeholder(tf.float32, [None, 1], 'special_V_target')
 
-                    self.OPT_SPE_A = tf.train.RMSPropOptimizer(LR_REG_A, name='Spe_RMSPropA')
-                    self.OPT_SPE_C = tf.train.RMSPropOptimizer(LR_REG_C, name='Spe_RMSPropC')
+                    self.OPT_SPE_A = tf.train.RMSPropOptimizer(LR_SPE_A, name='Spe_RMSPropA')
+                    self.OPT_SPE_C = tf.train.RMSPropOptimizer(LR_SPE_C, name='Spe_RMSPropC')
 
                     self.special_a_prob,self.special_v,self.special_a_params,self.special_c_params \
                         = self._build_special_net(scope)
@@ -69,9 +69,11 @@ class ACNet(object):
 
                 self._prepare_global_grads(scope)
 
+                # self._prepare_special_update_op(scope)
                 self._prepare_global_update_op(scope)
 
                 self._prepare_global_pull_op(scope)
+                self._prepare_special_pull_op(scope)
 
                 self._prepare_kl_devergance(scope)
 
@@ -284,7 +286,7 @@ class ACNet(object):
                          ,self.pull_c_params_special_dict[target_id]])
 
     def spe_choose_action(self, s, t):  # run by a local
-        prob_weights = self.session.run(self.special_a_prob, feed_dict={self.s: s[np.newaxis, :],self.t: t[np.newaxis, :]} )
+        prob_weights = self.session.run(self.special_a_prob, feed_dict={self.s: s[np.newaxis, :]} )
         action = np.random.choice(range(prob_weights.shape[1]),p=prob_weights.ravel())
         return action,prob_weights
 
@@ -295,8 +297,7 @@ class ACNet(object):
 
 
     def load_weight(self,target_id):
-        self.session.run([self.pull_a_params_special_dict[target_id],
-                          self.pull_c_params_special_dict[target_id]])
+        self.session.run([self.pull_a_params_special_dict[target_id],self.pull_c_params_special_dict[target_id]])
 
 
     def KL_divergence(self,p_stable,p_advance):
