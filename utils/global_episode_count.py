@@ -70,10 +70,9 @@ def _reset_result_mean_list():
     global ROA_MEAN, REWARD_LIST
     ROA_MEAN, REWARD_LIST = [], []
 
-
 def _get_result_mean_list():
     global ROA_MEAN, REWARD_LIST
-    return ROA_MEAN, REWARD_LIST
+    return average(ROA_MEAN), average(REWARD_LIST)
 
 
 #----------------------------------------------roa------------------------------------------
@@ -145,7 +144,7 @@ def _init_kl_beta():
     global GLOBAL_KL_BETA
     GLOBAL_KL_BETA = 0.001
 
-def _increase_kl_beta(kl):
+def _increase_kl_beta():
     global GLOBAL_KL_BETA
     GLOBAL_KL_BETA = GLOBAL_KL_BETA + 0.0005
     if GLOBAL_KL_BETA > 0.01:

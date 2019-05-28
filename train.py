@@ -2,6 +2,7 @@ from worker.global_worker_try import *
 from worker.special_worker import *
 import threading
 import datetime
+from utils.global_episode_count import _init_result_mean_list,_append_result_mean_list,_reset_result_mean_list
 from utils.global_episode_count import _init_train_count,_get_result_mean_list
 from utils.global_episode_count import _init_show_list,_get_show_list,_init_roa_list
 from utils.global_episode_count import _init_kl_list,_append_kl_list,_get_kl_mean
@@ -43,6 +44,7 @@ if __name__ == "__main__":
     _init_kl_list()
     _init_kl_beta()
     _init_steps_count()
+    _init_result_mean_list()
 
 
     worker_threads = []

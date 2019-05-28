@@ -3,6 +3,7 @@ from utils.global_episode_count import _get_train_count,_add_train_count
 from utils.global_episode_count import _get_steps_count,_add_steps_count
 from utils.global_episode_count import _append_kl_list,_reset_kl_list,_get_kl_mean
 from utils.global_episode_count import _increase_kl_beta,_decrease_kl_beta,_get_kl_beta
+from utils.global_episode_count import _init_result_mean_list,_append_result_mean_list,_reset_result_mean_list,_get_result_mean_list
 from config.constant import *
 import numpy as np
 from worker.worker import Worker
@@ -45,7 +46,7 @@ class Glo_Worker(Worker):
                 buffer_r.append(r)
                 if _get_steps_count()%4000 == 0:
                     # compute the mean of kl : if kl>kl_max: increase kl_beta   if kl<kl_mean: decrease  kl_beta
-                    kl_mean = _get_kl_mean()
+                    kl_list,kl_mean = _get_kl_mean()
                     if kl_mean>KL_MAX:
                         _increase_kl_beta()
                     if kl_mean<KL_MIN:
@@ -71,7 +72,8 @@ class Glo_Worker(Worker):
                         self.AC.s: buffer_s,
                         self.AC.a: buffer_a,
                         self.AC.t: buffer_t,
-                        self.AC.kl_beta:[kl_beta],
+                        #self.AC.kl_beta:[kl_beta],
+                        self.AC.kl_beta:[0.0],
                         self.AC.adv:buffer_advantage
                        }
                     self.AC.update_global(feed_dict)
@@ -85,8 +87,13 @@ class Glo_Worker(Worker):
                         roa = round((self.env.short_dist * 1.0 / step_in_episode), 4)
                     else:
                         roa = 0.000
-                    print("Train!     Epi:%6s || Glo_Roa:%5s  || Glo_Reward:%5s" % (EPI_COUNT, round(roa, 3), round(ep_r, 2)))
-                    if EPI_COUNT>100 and EPI_COUNT % EVALUATE_ITER == 0:
+                    _append_result_mean_list(roa,ep_r)
+                    if EPI_COUNT%100 == 0:
+                        roa_mean,reward_mean = _get_result_mean_list()
+                        print('--------------------------------------------------------------------------------------------------')
+                        print("Train!     Epi:%6s || Glo_Roa:%5s  || Glo_Reward:%5s" % (EPI_COUNT, round(roa_mean, 3), round(reward_mean, 2)))
+                        _reset_result_mean_list()
+                    # if EPI_COUNT>100 and EPI_COUNT % EVALUATE_ITER == 0:
                         roa_eva,reward_eva = self.evaluate()
                         print("Evaluate!  Epi:%5s || Roa_mean:%6s || Reward_mean:%7s "%(EPI_COUNT,round(roa_eva,4),round(reward_eva,3)))
                     break
