@@ -18,7 +18,7 @@ class ACNet(object):
                     self.s = tf.placeholder(tf.float32, [None, self.dim_s], 'State')
                     self.t = tf.placeholder(tf.float32, [None, self.dim_s], 'Target')
 
-                    self.global_a_params,self.global_c_params = self._build_global_params_dict(scope)
+                    self.global_a_params = self._build_global_params_dict(scope)
                     self.special_a_params_dict,self.special_c_params_dict = self._build_special_params_dict(scope)
 
             else:
@@ -32,7 +32,7 @@ class ACNet(object):
                     self.special_v_target = tf.placeholder(tf.float32, [None, 1], 'special_V_target')
                     self.t = tf.placeholder(tf.float32, [None, self.dim_s], 'T')
 
-                    self.adv      = tf.placeholder(tf.float32, [None, ], 'Advantage')
+                    self.adv      = tf.placeholder(tf.float32, [None,1], 'Advantage')
                     self.kl_beta  = tf.placeholder(tf.float32, [None,], 'KL_BETA')
 
                     self.OPT_A = tf.train.RMSPropOptimizer(LR_A, name='Glo_RMSPropA')
@@ -58,6 +58,8 @@ class ACNet(object):
                     self._prepare_update_op(scope)
 
                     self._prepare_pull_op(scope)
+
+                    self._prepare_kl_devergance(scope)
 
     def _build_global_params_dict(self, scope):
         with tf.variable_scope(scope):
@@ -205,8 +207,16 @@ class ACNet(object):
                                 tf.gradients(self.special_c_loss, self.special_c_params)]
 
 
-    def _prepare_update_op(self,scope):
+    def _prepare_kl_devergance(self,scope):
+        with tf.name_scope(scope+"kl_devergance"):
+            p_target = tf.stop_gradient(self.special_a_prob)
+            p_update = self.global_a_prob
+            self.kl = self.KL_divergence(p_stable=p_target, p_advance=p_update)
+            self.kl_mean = tf.reduce_mean(self.kl)
 
+
+
+    def _prepare_update_op(self,scope):
         with tf.name_scope(scope+'_global_update'):
             self.update_global_a_op = self.OPT_A.apply_gradients(list(zip(self.global_a_grads, self.global_AC.global_a_params)))
 
@@ -237,10 +247,6 @@ class ACNet(object):
 
 
     def compute_kl(self,feed_dict):
-        p_target = tf.stop_gradient(self.special_a_prob)
-        p_update = self.global_a_prob
-        self.kl = self.KL_divergence(p_stable=p_target, p_advance=p_update)
-        self.kl_mean = tf.reduce_mean(self.kl)
         kl = self.session.run(self.kl_mean,feed_dict=feed_dict)
         return kl
 
@@ -249,7 +255,7 @@ class ACNet(object):
                           self.update_special_c_dict[target_id]],feed_dict)
 
     def update_global(self,feed_dict):
-        self.session.run([self.update_global_a_op], feed_dict)  # local grads applies to global net
+        self.session.run(self.update_global_a_op, feed_dict)  # local grads applies to global net
 
 
     def pull_global(self):

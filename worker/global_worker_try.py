@@ -1,5 +1,8 @@
 from env.THOR_LOADER import *
-from global_episode_count import _get_train_count,_add_train_count
+from utils.global_episode_count import _get_train_count,_add_train_count
+from utils.global_episode_count import _get_steps_count,_add_steps_count
+from utils.global_episode_count import _append_kl_list,_reset_kl_list,_get_kl_mean
+from utils.global_episode_count import _increase_kl_beta,_decrease_kl_beta,_get_kl_beta
 from config.constant import *
 import numpy as np
 from worker.worker import Worker
@@ -17,35 +20,45 @@ class Glo_Worker(Worker):
         while not self.coord.should_stop() and _get_train_count() < MAX_GLOBAL_EP:
             EPI_COUNT = _add_train_count()
             s, t = self.env.reset_env()
+            kl_beta = _get_kl_beta()
             target_id = self.env.terminal_state_id
             ep_r = 0
             step_in_episode = 0
             while True:
                 self.AC.load_weight(target_id=target_id)
                 a,global_prob  = self.AC.glo_choose_action(s, t)
-                '''
-                _,special_prob = self.AC.spe_choose_action(s, t)
-                dict  = {
-                    self.AC.s: np.vstack([s]),
-                    self.AC.t: np.vstack([t]),
-                    self.AC.T:1,
-                }
-                kl = self.AC.compute_kl(dict)
-                '''
+
+                # compute kl_divergence
+                kl_dict  = {self.AC.s: np.vstack([s]),
+                            self.AC.t: np.vstack([t])}
+                kl = self.AC.compute_kl(kl_dict)
+                _append_kl_list(kl)
+
                 s_, r, done, info = self.env.take_action(a)
+
+                _add_steps_count()
                 ep_r += r
                 buffer_s.append(s)
                 buffer_s_next.append(s_)
                 buffer_a.append(a)
                 buffer_t.append(t)
                 buffer_r.append(r)
+                if _get_steps_count()%4000 == 0:
+                    # compute the mean of kl : if kl>kl_max: increase kl_beta   if kl<kl_mean: decrease  kl_beta
+                    kl_mean = _get_kl_mean()
+                    if kl_mean>KL_MAX:
+                        _increase_kl_beta()
+                    if kl_mean<KL_MIN:
+                        _decrease_kl_beta()
+                    kl_beta = _get_kl_beta()
+
                 if step_in_episode % UPDATE_GLOBAL_ITER == 0 or done:  # update global and assign to local net
-                    buffer_advantage = [0]*len(buffer_v)
                     buffer_v = self.AC.get_special_value(feed_dict={self.AC.s: buffer_s})
                     if done:
                         buffer_v[-1] = 0  # terminal
+                    buffer_advantage = [0]*len(buffer_v)
                     buffer_v_next = self.AC.get_special_value(feed_dict={self.AC.s: buffer_s_next})
-                    for i in len(buffer_r):
+                    for i in range(len(buffer_r)):
                         v_next = buffer_v_next[i]
                         reward = buffer_r[i]
                         q = reward + GAMMA*v_next
@@ -58,7 +71,7 @@ class Glo_Worker(Worker):
                         self.AC.s: buffer_s,
                         self.AC.a: buffer_a,
                         self.AC.t: buffer_t,
-                        self.AC.kl_beta:[0.0000],
+                        self.AC.kl_beta:[kl_beta],
                         self.AC.adv:buffer_advantage
                        }
                     self.AC.update_global(feed_dict)

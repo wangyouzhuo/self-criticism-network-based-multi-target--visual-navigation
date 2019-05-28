@@ -90,7 +90,7 @@ def _get_roa_mean():
     return GLOBAL_ROA_LIST,average(GLOBAL_ROA_LIST)
 
 
-#-------------------------------------------list_to_be_show-----------------------------------
+#---------------------------------------------list_to_be_show-----------------------------------
 def _init_show_list():
     global GLOBAL_SHOW_LIST
     GLOBAL_SHOW_LIST = []
@@ -116,6 +116,52 @@ def _append_kl_list(kl):
 def _get_kl_mean():
     global GLOBAL_KL_LIST
     return GLOBAL_KL_LIST,average(GLOBAL_KL_LIST)
+
+def _reset_kl_list():
+    global GLOBAL_KL_LIST
+    GLOBAL_KL_LIST = []
+
+
+#----------------------------------------------steps_count------------------------------------------
+def _init_steps_count():
+    global GLOBAL_STEPS_COUNT
+    GLOBAL_STEPS_COUNT = 0
+
+def _add_steps_count():
+    global GLOBAL_STEPS_COUNT
+    GLOBAL_STEPS_COUNT = GLOBAL_STEPS_COUNT + 1
+
+def _reset_steps_count():
+    global GLOBAL_STEPS_COUNT
+    GLOBAL_STEPS_COUNT = 0
+
+def _get_steps_count():
+    global GLOBAL_STEPS_COUNT
+    return GLOBAL_STEPS_COUNT
+
+
+#----------------------------------------------KL_BETA------------------------------------------
+def _init_kl_beta():
+    global GLOBAL_KL_BETA
+    GLOBAL_KL_BETA = 0.001
+
+def _increase_kl_beta(kl):
+    global GLOBAL_KL_BETA
+    GLOBAL_KL_BETA = GLOBAL_KL_BETA + 0.0005
+    if GLOBAL_KL_BETA > 0.01:
+        GLOBAL_KL_BETA = 0.01
+
+def _decrease_kl_beta():
+    global GLOBAL_KL_BETA
+    GLOBAL_KL_BETA = GLOBAL_KL_BETA - 0.0001
+    if GLOBAL_KL_BETA <= 0:
+        GLOBAL_KL_BETA = 0
+
+def _get_kl_beta():
+    global GLOBAL_STEPS_COUNT
+    return GLOBAL_STEPS_COUNT
+
+
 
 
 def average(target):

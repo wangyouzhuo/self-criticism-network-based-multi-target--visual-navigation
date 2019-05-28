@@ -4,6 +4,9 @@ import threading
 import datetime
 from utils.global_episode_count import _init_train_count,_get_result_mean_list
 from utils.global_episode_count import _init_show_list,_get_show_list,_init_roa_list
+from utils.global_episode_count import _init_kl_list,_append_kl_list,_get_kl_mean
+from utils.global_episode_count import _init_kl_beta
+from utils.global_episode_count import _init_steps_count,_add_steps_count,_reset_steps_count
 from model.model import *
 from config.params import *
 from config.constant import *
@@ -37,6 +40,9 @@ if __name__ == "__main__":
     _init_train_count()
     _init_show_list()
     _init_roa_list()
+    _init_kl_list()
+    _init_kl_beta()
+    _init_steps_count()
 
 
     worker_threads = []

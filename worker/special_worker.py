@@ -1,5 +1,5 @@
 from env.THOR_LOADER import *
-from global_episode_count import _get_train_count,_add_train_count
+from utils.global_episode_count import _get_train_count,_add_train_count
 from config.constant import *
 from config.params import *
 from worker.worker import Worker
@@ -56,8 +56,7 @@ class Spe_Worker(Worker):
                         self.AC.s: buffer_s,
                         self.AC.a: buffer_a,
                         self.AC.special_v_target: buffer_v_special,
-                        self.AC.t: buffer_t,
-                        self.AC.T: 1  }
+                        self.AC.t: buffer_t}
                     self.AC.update_special(feed_dict,target_id)
                     buffer_s, buffer_a, buffer_r, buffer_t = [], [], [], []
                     buffer_v_special = []
