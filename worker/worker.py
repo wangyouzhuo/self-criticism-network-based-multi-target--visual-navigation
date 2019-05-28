@@ -12,13 +12,13 @@ from worker.evaluater import Evaluater
 
 class Worker(object):
 
-    def __init__(self, name, globalAC, sess, coord, N_A, N_S, device):
+    def __init__(self, name, globalAC, sess, coord, N_A, N_S,type,device):
         env = load_thor_env(scene_name='bedroom_04', random_start=True, random_terminal=True,
                             whe_show=False, terminal_id=None, start_id=None, whe_use_image=False,
                             whe_flatten=False, num_of_frames=1)
         self.env = env
         self.name = name
-        self.AC = ACNet(scope=name, globalAC=globalAC, session=sess, N_A=N_A, N_S=N_S, device=device)
+        self.AC = ACNet(scope=name, globalAC=globalAC, session=sess, N_A=N_A, N_S=N_S,type=type,device=device)
         self.session = sess
         self.coord = coord
         _init_result_mean_list()

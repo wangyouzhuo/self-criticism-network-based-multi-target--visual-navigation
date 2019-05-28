@@ -1,65 +1,83 @@
 from env.THOR_LOADER import *
-from global_episode_count import _get_train_count,_add_train_count
-from global_episode_count import _append_roa_list,_get_roa_mean,_init_roa_list
-from global_episode_count import _append_show_list,_init_show_list
+from utils.global_episode_count import _get_train_count,_add_train_count
+from utils.global_episode_count import _get_steps_count,_add_steps_count
+from utils.global_episode_count import _append_kl_list,_reset_kl_list,_get_kl_mean
+from utils.global_episode_count import _increase_kl_beta,_decrease_kl_beta,_get_kl_beta
+from utils.global_episode_count import _init_result_mean_list,_append_result_mean_list,_reset_result_mean_list,_get_result_mean_list
 from config.constant import *
 import numpy as np
 from worker.worker import Worker
 
 class Glo_Worker(Worker):
 
-    def __init__(self, name,globalAC,sess,coord,N_A,N_S,device):
-        super().__init__(name=name, globalAC=globalAC, sess=sess, coord=coord,N_A= N_A,N_S= N_S,device=device)
+    def __init__(self, name,globalAC,sess,coord,N_A,N_S,device,type='Target_General'):
+        super().__init__(name=name, globalAC=globalAC, sess=sess, coord=coord,N_A= N_A,N_S= N_S,type=type,device=device)
 
 
     def work(self):
         buffer_s, buffer_a, buffer_r, buffer_t = [], [], [], []
+        buffer_s_next = []
+        buffer_q = []
         while not self.coord.should_stop() and _get_train_count() < MAX_GLOBAL_EP:
             EPI_COUNT = _add_train_count()
             s, t = self.env.reset_env()
+            kl_beta = _get_kl_beta()
             target_id = self.env.terminal_state_id
             ep_r = 0
             step_in_episode = 0
             while True:
                 self.AC.load_weight(target_id=target_id)
                 a,global_prob  = self.AC.glo_choose_action(s, t)
-                # print(global_prob)
-                '''
-                _,special_prob = self.AC.spe_choose_action(s, t)
-                dict  = {
-                    self.AC.s: np.vstack([s]),
-                    self.AC.t: np.vstack([t]),
-                    self.AC.T:1,
-                }
-                kl = self.AC.compute_kl(dict)
-                '''
+
+                # compute kl_divergence
+                kl_dict  = {self.AC.s: np.vstack([s]),
+                            self.AC.t: np.vstack([t])}
+                kl = self.AC.compute_kl(kl_dict)
+                _append_kl_list(kl)
+
                 s_, r, done, info = self.env.take_action(a)
+
+                _add_steps_count()
                 ep_r += r
                 buffer_s.append(s)
+                buffer_s_next.append(s_)
                 buffer_a.append(a)
                 buffer_t.append(t)
                 buffer_r.append(r)
+                if _get_steps_count()%4000 == 0:
+                    # compute the mean of kl : if kl>kl_max: increase kl_beta   if kl<kl_mean: decrease  kl_beta
+                    kl_list,kl_mean = _get_kl_mean()
+                    if kl_mean>KL_MAX:
+                        _increase_kl_beta()
+                    if kl_mean<KL_MIN:
+                        _decrease_kl_beta()
+                    kl_beta = _get_kl_beta()
+
                 if step_in_episode % UPDATE_GLOBAL_ITER == 0 or done:  # update global and assign to local net
+                    buffer_v = self.AC.get_special_value(feed_dict={self.AC.s: buffer_s})
                     if done:
-                        v_global = 0  # terminal
-                    else:
-                        v_global = self.session.run(self.AC.global_v,
-                            {self.AC.s: s_[np.newaxis, :], self.AC.t: t[np.newaxis, :]})[0, 0]
-                    buffer_v_global = []
-                    for r in buffer_r[::-1]:  # reverse buffer r
-                        v_global = r + GAMMA * v_global
-                        buffer_v_global.append(v_global)
-                    buffer_v_global.reverse()
+                        buffer_v[-1] = 0  # terminal
+                    buffer_advantage = [0]*len(buffer_v)
+                    buffer_v_next = self.AC.get_special_value(feed_dict={self.AC.s: buffer_s_next})
+                    for i in range(len(buffer_r)):
+                        v_next = buffer_v_next[i]
+                        reward = buffer_r[i]
+                        q = reward + GAMMA*v_next
+                        advantage = q-buffer_v[i]
+                        buffer_advantage[i] = advantage
+
                     buffer_s, buffer_a, buffer_t = np.vstack(buffer_s), np.array(buffer_a), np.vstack(buffer_t)
-                    buffer_v_global = np.vstack(buffer_v_global)
+                    buffer_advantage = np.vstack(buffer_advantage)
                     feed_dict = {
                         self.AC.s: buffer_s,
                         self.AC.a: buffer_a,
-                        self.AC.global_v_target: buffer_v_global,
                         self.AC.t: buffer_t,
-                        self.AC.T: 1 }
+                        #self.AC.kl_beta:[kl_beta],
+                        self.AC.kl_beta:[0.0],
+                        self.AC.adv:buffer_advantage
+                       }
                     self.AC.update_global(feed_dict)
-                    buffer_s, buffer_a, buffer_r, buffer_t = [], [], [], []
+                    buffer_s, buffer_a, buffer_r, buffer_t,buffer_s_next = [], [], [], [],[]
                     self.AC.pull_global()
                 s = s_
                 step_in_episode += 1
@@ -69,16 +87,15 @@ class Glo_Worker(Worker):
                         roa = round((self.env.short_dist * 1.0 / step_in_episode), 4)
                     else:
                         roa = 0.000
-                    _append_roa_list(roa)
-                    # print("Train!     Epi:%6s || Glo_Roa:%5s  || Glo_Reward:%5s" % (EPI_COUNT, round(roa, 3), round(ep_r, 2)))
-                    if EPI_COUNT>100 and _get_train_count() % EVALUATE_ITER == 0:
-                        roa_list,roa_mean = _get_roa_mean()
-                        print("EPI_COUNT: ",EPI_COUNT,"roa_len:",len(roa_list)," || roa_mean:",roa_mean,)
-                        _append_show_list(roa_mean)
-                        _init_roa_list()
-                        # roa_eva,reward_eva = self.evaluate()
-                        # print("Evaluate!  Epi:%5s || Roa_mean:%6s || Reward_mean:%7s "%(EPI_COUNT,round(roa_eva,4),round(reward_eva,3)))
-
+                    _append_result_mean_list(roa,ep_r)
+                    if EPI_COUNT%100 == 0:
+                        roa_mean,reward_mean = _get_result_mean_list()
+                        print('--------------------------------------------------------------------------------------------------')
+                        print("Train!     Epi:%6s || Glo_Roa:%5s  || Glo_Reward:%5s" % (EPI_COUNT, round(roa_mean, 3), round(reward_mean, 2)))
+                        _reset_result_mean_list()
+                    # if EPI_COUNT>100 and EPI_COUNT % EVALUATE_ITER == 0:
+                        roa_eva,reward_eva = self.evaluate()
+                        print("Evaluate!  Epi:%5s || Roa_mean:%6s || Reward_mean:%7s "%(EPI_COUNT,round(roa_eva,4),round(reward_eva,3)))
                     break
 
     def evaluate(self):

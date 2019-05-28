@@ -7,8 +7,8 @@ from worker.worker import Worker
 
 class Spe_Worker(Worker):
 
-    def __init__(self, name, globalAC, sess, coord, N_A, N_S,device):
-        super().__init__(name=name, globalAC=globalAC, sess=sess, coord=coord,N_A= N_A,N_S= N_S,device=device)
+    def __init__(self, name, globalAC, sess, coord, N_A, N_S,device,type='Target_Special'):
+        super().__init__(name=name, globalAC=globalAC, sess=sess, coord=coord,N_A= N_A,N_S= N_S,type=type,device=device)
 
     def work(self):
         total_step = 1
@@ -19,7 +19,6 @@ class Spe_Worker(Worker):
             target_id = self.env.terminal_state_id
             ep_r = 0
             step_in_episode = 0
-            kl_list = []
             while True:
                 self.AC.load_weight(target_id=target_id)
                 a,_ = self.AC.spe_choose_action(s, t)

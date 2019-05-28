@@ -25,8 +25,8 @@ class THORDiscreteEnvironment(object):
   def __init__(self, config=dict()):
 
     # configurations
-    self.scene_name          = config.get('scene_name', 'bedroom_04') # 默认使用bedroom_04房间
-    self.random_start        = config.get('random_start', True)  # 随机起点
+    self.scene_name          = config.get('scene_name', 'bedroom_04')
+    self.random_start        = config.get('random_start', True)
     self.random_terminal     = config.get('random_terminal',False)
     self.terminal_state_id   = config.get('terminal_state_id', 1)
     self.start_state_id      = config.get('start_state_id',1)
@@ -88,17 +88,14 @@ class THORDiscreteEnvironment(object):
 
   def take_action(self, action):
     assert not self.terminal  , 'step() called in terminal_state'
-    # 如果执行当前action不撞墙，则执行当前action
     if self.transition_graph[self.current_state_id][action] != -1:
-      self.collided = False # 撞墙与否
+      self.collided = False
       self.current_state_id = self.transition_graph[self.current_state_id][action].reshape([-1])[0]
-      # 如果执行action后到达终点
       # print("self.terminal_state_id:%3s  ||  self.current_state_id:%3s"%(self.terminal_state_id,self.current_state_id))
       if self.terminal_state_id == self.current_state_id:
         self.terminal = True
       else:
         self.terminal = False
-    # 否则 没有到终点 且 还撞墙了
     else:
       self.terminal = False
       self.collided = True
@@ -128,13 +125,11 @@ class THORDiscreteEnvironment(object):
 
   # properties
 
-  # 动作空间数量
   @property
   def action_size(self):
     # move forward/backward, turn left/right for navigation
     return ACTION_SIZE
 
-  # 返回所有list动作名称
   @property
   def action_definitions(self):
     action_vocab = ["Forward", "Right", "Left", "Backward"]
@@ -145,13 +140,11 @@ class THORDiscreteEnvironment(object):
     distance = self.shortest_path_distances[self.current_state_id][self.terminal_state_id]
     return distance
 
-  # 返回current_state_id对应的observation
   @property
   def observation(self):
     return self.h5_file['observation'][self.current_state_id]
 
 
-  # 返回current_state_id对应的feature
   @property
   def state(self):
     # read from hdf5 cache
@@ -243,5 +236,5 @@ if __name__ == "__main__":
 
   from PIL import Image
   import numpy as n
-  im = Image.fromarray(raw_state)  # numpy 转 image类
+  im = Image.fromarray(raw_state)
   im.show()

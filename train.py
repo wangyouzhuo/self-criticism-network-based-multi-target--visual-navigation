@@ -1,4 +1,4 @@
-from worker.global_worker_try import *
+from worker.global_worker import *
 from worker.special_worker import *
 import threading
 import datetime
