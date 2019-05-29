@@ -266,7 +266,11 @@ class ACNet(object):
 
 
     def compute_kl(self,feed_dict):
+        p_target,p_update = self.session.run([self.special_a_prob,self.global_a_prob],feed_dict)
         kl = self.session.run(self.kl_mean,feed_dict=feed_dict)
+        if kl>1:
+            kl = 1
+        print('p_target:%s  p_update:%s  kl:%s '%(p_target,p_update,kl))
         return kl
 
     def update_special(self, feed_dict,target_id):  # run by a local
