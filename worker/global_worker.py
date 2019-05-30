@@ -107,9 +107,10 @@ class Glo_Worker(Worker):
                         roa_mean_train,reward_mean_train,length_train = _get_train_mean_roa_reward()
                         _reset_result_mean_list()
                         roa_eva,reward_eva,lenght_eva = self.evaluate()
-                        if length_train>180 and lenght_eva>30:
+                        if length_train>100  :
                             _append_reward_roa_show(r_evaluate=reward_eva , roa_evaluate=roa_eva,
                                                     r_train=roa_mean_train, roa_train=reward_mean_train)
+                            print("-------------------------------length:%s----------------------------------"%length_train)
                             print("Train!     Epi:%6s || Glo_Roa:%6s  || Glo_Reward:%7s         Evaluate!  Epi:%6s || Roa_mean:%6s || Reward_mean:%7s "
                               %(EPI_COUNT, round(roa_mean_train, 3), round(reward_mean_train, 2),EPI_COUNT,round(roa_eva,4),round(reward_eva,3)))
                     break
