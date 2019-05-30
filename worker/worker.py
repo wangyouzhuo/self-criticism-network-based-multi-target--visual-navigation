@@ -21,7 +21,6 @@ class Worker(object):
         self.AC = ACNet(scope=name, globalAC=globalAC, session=sess, N_A=N_A, N_S=N_S,type=type,device=device)
         self.session = sess
         self.coord = coord
-        _init_result_mean_list()
         self.N_A = N_A
         self.N_S = N_S
 
@@ -41,12 +40,10 @@ class Worker(object):
             thread.start()
         for thread in evaluaters:
             thread.join()
-        roa_mean,reward_mean = _evaluate_list_mean()
-        if _length_evaluate_list()[0]>10:
-            _append_result_mean_list(roa=roa_mean,reward=reward_mean)
+        eva_roa_mean,eva_reward_mean,lenght_eva = _evaluate_list_mean()
         _reset_evaluate_list()
         _reset_evaluate_count()
-        return roa_mean,reward_mean
+        return eva_roa_mean,eva_reward_mean,lenght_eva
 
 
     def evaluate_thread(self):

@@ -3,7 +3,8 @@ from utils.global_episode_count import _get_train_count,_add_train_count
 from utils.global_episode_count import _get_steps_count,_add_steps_count
 from utils.global_episode_count import _append_kl_list,_reset_kl_list,_get_kl_mean
 from utils.global_episode_count import _increase_kl_beta,_decrease_kl_beta,_get_kl_beta
-from utils.global_episode_count import _init_result_mean_list,_append_result_mean_list,_reset_result_mean_list,_get_result_mean_list
+from utils.global_episode_count import _init_result_mean_list,_append_result_mean_list,_reset_result_mean_list,_get_train_mean_roa_reward
+from utils.global_episode_count import _init_reward_roa_show,_append_reward_roa_show,_get_reward_roa_show
 from config.constant import *
 import numpy as np
 from worker.worker import Worker
@@ -103,13 +104,14 @@ class Glo_Worker(Worker):
                         roa = 0.000
                     _append_result_mean_list(roa,ep_r)
                     if EPI_COUNT%200 == 0:
-                        roa_mean,reward_mean,length = _get_result_mean_list()
+                        roa_mean_train,reward_mean_train,length_train = _get_train_mean_roa_reward()
                         _reset_result_mean_list()
-                        roa_eva,reward_eva = self.evaluate()
-                        if length>100:
-
+                        roa_eva,reward_eva,lenght_eva = self.evaluate()
+                        if length_train>180 and lenght_eva>30:
+                            _append_reward_roa_show(r_evaluate=reward_eva , roa_evaluate=roa_eva,
+                                                    r_train=roa_mean_train, roa_train=reward_mean_train)
                             print("Train!     Epi:%6s || Glo_Roa:%6s  || Glo_Reward:%7s         Evaluate!  Epi:%6s || Roa_mean:%6s || Reward_mean:%7s "
-                              %(EPI_COUNT, round(roa_mean, 3), round(reward_mean, 2),EPI_COUNT,round(roa_eva,4),round(reward_eva,3)))
+                              %(EPI_COUNT, round(roa_mean_train, 3), round(reward_mean_train, 2),EPI_COUNT,round(roa_eva,4),round(reward_eva,3)))
                     break
 
     def evaluate(self):

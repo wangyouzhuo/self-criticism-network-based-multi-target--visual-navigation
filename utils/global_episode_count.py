@@ -48,7 +48,8 @@ def _length_evaluate_list():
 def _evaluate_list_mean():
     global ROA_LIST_EVA, REWARD_LIST_EVA
     # print("ROA_LIST : ",ROA_LIST)
-    return average(ROA_LIST_EVA),average(REWARD_LIST_EVA)
+    length_eva = len(ROA_LIST_EVA)
+    return average(ROA_LIST_EVA),average(REWARD_LIST_EVA),length_eva
 
 def _reset_evaluate_list():
     global ROA_LIST_EVA, REWARD_LIST_EVA
@@ -56,7 +57,7 @@ def _reset_evaluate_list():
 
 
 
-#-----------------------------store roa_mean & reward_mean-------------------------------
+#-----------------------------store roa_mean & reward_mean of train-------------------------------
 def _init_result_mean_list():
     global ROA_MEAN,REWARD_LIST
     ROA_MEAN, REWARD_LIST = [],[]
@@ -70,7 +71,7 @@ def _reset_result_mean_list():
     global ROA_MEAN, REWARD_LIST
     ROA_MEAN, REWARD_LIST = [], []
 
-def _get_result_mean_list():
+def _get_train_mean_roa_reward():
     global ROA_MEAN, REWARD_LIST
     # print(REWARD_LIST)
     return average(ROA_MEAN), average(REWARD_LIST),len(REWARD_LIST)
@@ -169,7 +170,6 @@ def _init_reward_roa_show():
     REWARD_SHOW_TRAIN   , ROA_SHOW_TRAIN    = [],[]
     REWARD_SHOW_EALUATE , ROA_SHOW_EVALUATE = [],[]
 
-
 def _append_reward_roa_show(r_train,roa_train,r_evaluate,roa_evaluate):
     global REWARD_SHOW_TRAIN   , ROA_SHOW_TRAIN
     global REWARD_SHOW_EALUATE , ROA_SHOW_EVALUATE
@@ -178,11 +178,11 @@ def _append_reward_roa_show(r_train,roa_train,r_evaluate,roa_evaluate):
     REWARD_SHOW_EALUATE.append(r_evaluate)
     ROA_SHOW_EVALUATE.append(roa_evaluate)
 
-
 def _get_reward_roa_show():
     global REWARD_SHOW_TRAIN   , ROA_SHOW_TRAIN
     global REWARD_SHOW_EALUATE , ROA_SHOW_EVALUATE
     return REWARD_SHOW_TRAIN,ROA_SHOW_TRAIN,REWARD_SHOW_EALUATE,ROA_SHOW_EVALUATE
+
 
 
 
