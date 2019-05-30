@@ -105,9 +105,9 @@ class Glo_Worker(Worker):
                     if EPI_COUNT%200 == 0:
                         roa_mean,reward_mean,length = _get_result_mean_list()
                         _reset_result_mean_list()
-                    # if EPI_COUNT>100 and EPI_COUNT % EVALUATE_ITER == 0:
                         roa_eva,reward_eva = self.evaluate()
                         if length>100:
+
                             print("Train!     Epi:%6s || Glo_Roa:%6s  || Glo_Reward:%7s         Evaluate!  Epi:%6s || Roa_mean:%6s || Reward_mean:%7s "
                               %(EPI_COUNT, round(roa_mean, 3), round(reward_mean, 2),EPI_COUNT,round(roa_eva,4),round(reward_eva,3)))
                     break

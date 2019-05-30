@@ -33,26 +33,26 @@ def _reset_evaluate_count():
 
 # ----------------------------evaluate roa & reward list--------------------------
 def _init_evaluate_list():
-    global ROA_LIST,REWARD_LIST
-    ROA_LIST,REWARD_LIST = [],[]
+    global ROA_LIST_EVA,REWARD_LIST_EVA
+    ROA_LIST_EVA,REWARD_LIST_EVA = [],[]
 
 def _append_evaluate_list(roa,reward):
-    global ROA_LIST, REWARD_LIST
-    ROA_LIST.append(roa)
-    REWARD_LIST.append(reward)
+    global ROA_LIST_EVA, REWARD_LIST_EVA
+    ROA_LIST_EVA.append(roa)
+    REWARD_LIST_EVA.append(reward)
 
 def _length_evaluate_list():
-    global ROA_LIST, REWARD_LIST
-    return len(ROA_LIST), len(REWARD_LIST)
+    global ROA_LIST_EVA, REWARD_LIST_EVA
+    return len(ROA_LIST_EVA), len(REWARD_LIST_EVA)
 
 def _evaluate_list_mean():
-    global ROA_LIST, REWARD_LIST
+    global ROA_LIST_EVA, REWARD_LIST_EVA
     # print("ROA_LIST : ",ROA_LIST)
-    return average(ROA_LIST),average(REWARD_LIST)
+    return average(ROA_LIST_EVA),average(REWARD_LIST_EVA)
 
 def _reset_evaluate_list():
-    global ROA_LIST, REWARD_LIST
-    ROA_LIST, REWARD_LIST = [], []
+    global ROA_LIST_EVA, REWARD_LIST_EVA
+    ROA_LIST_EVA, REWARD_LIST_EVA = [], []
 
 
 
@@ -160,6 +160,29 @@ def _decrease_kl_beta():
 def _get_kl_beta():
     global GLOBAL_KL_BETA
     return GLOBAL_KL_BETA
+
+#----------------------------------------------REWARD_ROA_SHOW------------------------------------------
+
+def _init_reward_roa_show():
+    global REWARD_SHOW_TRAIN   , ROA_SHOW_TRAIN
+    global REWARD_SHOW_EALUATE , ROA_SHOW_EVALUATE
+    REWARD_SHOW_TRAIN   , ROA_SHOW_TRAIN    = [],[]
+    REWARD_SHOW_EALUATE , ROA_SHOW_EVALUATE = [],[]
+
+
+def _append_reward_roa_show(r_train,roa_train,r_evaluate,roa_evaluate):
+    global REWARD_SHOW_TRAIN   , ROA_SHOW_TRAIN
+    global REWARD_SHOW_EALUATE , ROA_SHOW_EVALUATE
+    REWARD_SHOW_TRAIN.append(r_train)
+    ROA_SHOW_TRAIN.append(roa_train)
+    REWARD_SHOW_EALUATE.append(r_evaluate)
+    ROA_SHOW_EVALUATE.append(roa_evaluate)
+
+
+def _get_reward_roa_show():
+    global REWARD_SHOW_TRAIN   , ROA_SHOW_TRAIN
+    global REWARD_SHOW_EALUATE , ROA_SHOW_EVALUATE
+    return REWARD_SHOW_TRAIN,ROA_SHOW_TRAIN,REWARD_SHOW_EALUATE,ROA_SHOW_EVALUATE
 
 
 

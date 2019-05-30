@@ -8,6 +8,7 @@ from utils.global_episode_count import _init_show_list,_get_show_list,_init_roa_
 from utils.global_episode_count import _init_kl_list,_append_kl_list,_get_kl_mean
 from utils.global_episode_count import _init_kl_beta
 from utils.global_episode_count import _init_steps_count,_add_steps_count,_reset_steps_count
+from utils.global_episode_count import _init_reward_roa_show,_append_reward_roa_show,_get_reward_roa_show
 from model.model import *
 from config.params import *
 from config.constant import *
@@ -45,6 +46,7 @@ if __name__ == "__main__":
     _init_kl_beta()
     _init_steps_count()
     _init_result_mean_list()
+    _init_reward_roa_show()
 
 
     worker_threads = []
