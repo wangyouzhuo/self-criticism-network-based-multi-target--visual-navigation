@@ -8,6 +8,18 @@ from config.constant import *
 import numpy as np
 from worker.worker import Worker
 
+
+def count_list(target):
+    if len(target)>0:
+        count = 0
+        for item in target:
+            if item<0.2:
+                count = count + 1
+        return count*1.0/len(target)
+    else:
+        return 0
+
+
 class Glo_Worker(Worker):
 
     def __init__(self, name,globalAC,sess,coord,N_A,N_S,device,type='Target_General'):
@@ -52,7 +64,7 @@ class Glo_Worker(Worker):
                     if kl_mean<KL_MIN:
                         _decrease_kl_beta()
                     kl_beta = _get_kl_beta()
-                    print("kl_beta: %6s   kl_mean:%6s"%(round(kl_beta,4),round(kl_mean,4)))
+                    #print("kl_beta: %6s     kl_list:%6s    kl_mean:%6s"%(round(kl_beta,4),round(count_list(kl_list),3),round(kl_mean,4)))
                     _reset_kl_list()
 
                 if step_in_episode % UPDATE_GLOBAL_ITER == 0 or done:  # update global and assign to local net
@@ -91,11 +103,12 @@ class Glo_Worker(Worker):
                         roa = 0.000
                     _append_result_mean_list(roa,ep_r)
                     if EPI_COUNT%200 == 0:
-                        roa_mean,reward_mean = _get_result_mean_list()
+                        roa_mean,reward_mean,length = _get_result_mean_list()
                         _reset_result_mean_list()
                     # if EPI_COUNT>100 and EPI_COUNT % EVALUATE_ITER == 0:
                         roa_eva,reward_eva = self.evaluate()
-                        print("Train!     Epi:%6s || Glo_Roa:%6s  || Glo_Reward:%7s         Evaluate!  Epi:%6s || Roa_mean:%6s || Reward_mean:%7s "
+                        if length>100:
+                            print("Train!     Epi:%6s || Glo_Roa:%6s  || Glo_Reward:%7s         Evaluate!  Epi:%6s || Roa_mean:%6s || Reward_mean:%7s "
                               %(EPI_COUNT, round(roa_mean, 3), round(reward_mean, 2),EPI_COUNT,round(roa_eva,4),round(reward_eva,3)))
                     break
 

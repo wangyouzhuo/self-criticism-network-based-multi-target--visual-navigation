@@ -141,7 +141,8 @@ class ACNet(object):
             # scene_layer --> prob
             w_actor = generate_fc_weight(shape=[512, self.dim_a], name='global_w_a')
             b_actor = generate_fc_bias(shape=[self.dim_a], name='global_b_a')
-            prob = tf.nn.softmax(tf.matmul(scene_layer, w_actor) + b_actor)
+            self.global_logits = tf.matmul(scene_layer, w_actor) + b_actor
+            prob = tf.nn.softmax(self.global_logits)
 
             a_params = [w_encode, b_encode,w_fusion, b_fusion,
                         w_scene , b_scene ,w_actor , b_actor ]
@@ -154,8 +155,8 @@ class ACNet(object):
             # special_actor
             w_actor = generate_fc_weight(shape=[self.dim_s, self.dim_a], name='special_w_a')
             b_actor = generate_fc_bias(shape=[self.dim_a], name='special_b_a')
-            logits = tf.matmul(self.s, w_actor) + b_actor
-            prob = tf.nn.softmax(logits)
+            self.special_logits = tf.matmul(self.s, w_actor) + b_actor
+            prob = tf.nn.softmax(self.special_logits)
 
             # special_critic
             w_critic = generate_fc_weight(shape=[self.dim_s, 1], name='special_w_c')
@@ -266,11 +267,12 @@ class ACNet(object):
 
 
     def compute_kl(self,feed_dict):
+        special_logits,global_logits = self.session.run([self.special_logits,self.global_logits],feed_dict)
         p_target,p_update = self.session.run([self.special_a_prob,self.global_a_prob],feed_dict)
         kl = self.session.run(self.kl_mean,feed_dict=feed_dict)
         if kl>1:
             kl = 1
-        print('p_target:%s  p_update:%s  kl:%s '%(p_target,p_update,kl))
+        #print('special_logits:%s  global_logits:%s  kl:%s '%(special_logits,global_logits,kl))
         return kl
 
     def update_special(self, feed_dict,target_id):  # run by a local
@@ -308,6 +310,8 @@ class ACNet(object):
         X = tf.distributions.Categorical(probs = p_stable )
         Y = tf.distributions.Categorical(probs = p_advance)
         return tf.clip_by_value(tf.distributions.kl_divergence(X, Y), clip_value_min=0.0, clip_value_max=10)
+        #distance = tf.nn.l2_loss(p_stable-p_advance)
+        #return distance
 
 
     def get_special_value(self,feed_dict):

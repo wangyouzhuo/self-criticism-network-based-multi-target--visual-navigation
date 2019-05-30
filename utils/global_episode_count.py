@@ -72,7 +72,8 @@ def _reset_result_mean_list():
 
 def _get_result_mean_list():
     global ROA_MEAN, REWARD_LIST
-    return average(ROA_MEAN), average(REWARD_LIST)
+    # print(REWARD_LIST)
+    return average(ROA_MEAN), average(REWARD_LIST),len(REWARD_LIST)
 
 
 #----------------------------------------------roa------------------------------------------
