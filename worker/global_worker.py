@@ -115,8 +115,8 @@ class Glo_Worker(Worker):
                     break
 
     def evaluate(self):
-        roa,reward = super().evaluate()
-        return roa,reward
+        roa,reward,length = super().evaluate()
+        return roa,reward,length
 
 
 
