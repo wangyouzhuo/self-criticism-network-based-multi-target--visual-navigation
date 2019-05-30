@@ -170,6 +170,7 @@ def _init_reward_roa_show():
     REWARD_SHOW_TRAIN   , ROA_SHOW_TRAIN    = [],[]
     REWARD_SHOW_EALUATE , ROA_SHOW_EVALUATE = [],[]
 
+
 def _append_reward_roa_show(r_train,roa_train,r_evaluate,roa_evaluate):
     global REWARD_SHOW_TRAIN   , ROA_SHOW_TRAIN
     global REWARD_SHOW_EALUATE , ROA_SHOW_EVALUATE
@@ -177,6 +178,7 @@ def _append_reward_roa_show(r_train,roa_train,r_evaluate,roa_evaluate):
     ROA_SHOW_TRAIN.append(roa_train)
     REWARD_SHOW_EALUATE.append(r_evaluate)
     ROA_SHOW_EVALUATE.append(roa_evaluate)
+
 
 def _get_reward_roa_show():
     global REWARD_SHOW_TRAIN   , ROA_SHOW_TRAIN

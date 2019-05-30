@@ -73,6 +73,8 @@ if __name__ == "__main__":
 
     #text_1 = '|Alpha_incre:%s Alpha_decre:%s|%sTargets|Use_spe:%s Use_glo:%s|Fus_prob:%s Whe_adju:%s|KLmin:%s KLmax:%s|LR_A:%s LR_C:%s|LR_REG_A:%s LR_REG_C:%s' % \
     #                      (  ALPHA_INCREASE,   ALPHA_DECREASE,  len(TARGET_ID_LIST),WHE_SPECIAL_NET,WHE_NEED_GLOBAL, WHE_FUSION_PROB,WHE_ADJUST, KL_MIN, KL_MAX,LR_A,LR_C,LR_REG_A,LR_REG_C)
+
+
     plt.figure(figsize=(20, 5))
     plt.figure(1)
     plt.axis([0,len(ROA_SHOW_TRAIN),0,1])
@@ -83,7 +85,7 @@ if __name__ == "__main__":
 
     plt.figure(figsize=(20, 5))
     plt.figure(1)
-    plt.axis([0,len(ROA_SHOW_EVALUATE),0,1])
+    plt.axis([0,len(ROA_SHOW_EVALUATE),-30,20])
     plt.plot(np.arange(len(ROA_SHOW_EVALUATE)), ROA_SHOW_EVALUATE, color="b")
     plt.xlabel('hundred episodes')
     plt.ylabel('Total mean roa evaluate!')
