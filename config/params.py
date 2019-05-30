@@ -1,8 +1,7 @@
 LR_A = 0.0001  # learning rate for actor
-LR_C = 0.0001  # learning rate for critic
 
 LR_SPE_A = 0.0005
-LR_SPE_C = 0.0005
+LR_SPE_C = 0.001
 
 ENTROPY_BETA = 0.1
 
