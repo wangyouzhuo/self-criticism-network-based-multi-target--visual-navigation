@@ -13,7 +13,6 @@
 
 import os
 import sys
-from config.config import *
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
@@ -48,11 +47,6 @@ KL_MAX = 0.02
 
 BETA_REG_VALUE = 0.5
 BETA_REG_ACTION = 0.5
-
-
-WHE_SPECIAL_NET = False
-WHE_NEED_GLOBAL = True
-WHE_FUSION_PROB = False
 
 
 device = "/gpu:0"
@@ -200,8 +194,7 @@ class ACNet(object):
 
 
     def update(self, feed_dict):  # run by a local
-        if WHE_NEED_GLOBAL:
-            SESS.run([self.update_global_a_op, self.update_global_c_op], feed_dict)  # local grads applies to global net
+        SESS.run([self.update_global_a_op, self.update_global_c_op], feed_dict)  # local grads applies to global net
 
     def pull(self):  # run by a local
         SESS.run([self.pull_a_params_global, self.pull_c_params_global])
@@ -227,9 +220,9 @@ def generate_fc_bias(shape, name):
 
 class Worker(object):
     def __init__(self, name, globalAC):
-        env = load_thor_env(scene_name='bedroom_04' , random_start=RANDOM_START,
-                            random_terminal=RANDOM_TERMINAL , whe_show=WHE_SHOW,
-                            terminal_id=TERMINAL_ID , start_id=START_ID, whe_use_image=WHE_USE_IMAGE,
+        env = load_thor_env(scene_name='bedroom_04' , random_start=True,
+                            random_terminal=True , whe_show=False,
+                            terminal_id=None , start_id=None, whe_use_image=None,
                             whe_flatten=False, num_of_frames=1)
         self.env = env
         self.name = name
@@ -254,7 +247,6 @@ class Worker(object):
             ep_r = 0
             step_in_episode = 0
             while True:
-                self.AC.load_weight(target_id=target_id)
                 a = self.AC.choose_action(s, t)
                 current_id = self.env.current_state_id
                 s_, r, done, info = self.env.take_action(a)
@@ -302,7 +294,7 @@ class Worker(object):
                         GLOBAL_R_MEAN_LIST.append(ep_r)
                         GLOBAL_ROA_MEAN_LIST.append(roa)
                         if GLOBAL_EP > 100:
-                            if GLOBAL_EP % 100 == 0:
+                            if GLOBAL_EP % 200 == 0:
                                 GLOBAL_R.append(self.average(GLOBAL_R_MEAN_LIST))
                                 GLOBAL_R_MEAN_LIST = []
                                 GLOBAL_ROA.append(self.average(GLOBAL_ROA_MEAN_LIST))
@@ -354,11 +346,20 @@ if __name__ == "__main__":
     COORD.join(worker_threads)
 
 
-    plt.figure(figsize=(15, 5))
-    plt.plot(np.arange(len(GLOBAL_ROA)), GLOBAL_ROA)
+    plt.figure(figsize=(20, 5))
+    plt.figure(1)
+    plt.axis([0,len(GLOBAL_ROA),0,1])
+    plt.plot(np.arange(len(GLOBAL_ROA)), GLOBAL_ROA, color="r")
     plt.xlabel('hundred episodes')
-    plt.ylabel('Total mean roa')
-    title = '%s_targets-use_spe_net:%s-use_fusion_prob:%s--KL_MIN:%s-KL_MAX:%s'%\
-            (len(TARGET_ID_LIST),WHE_SPECIAL_NET,WHE_FUSION_PROB,KL_MIN,KL_MAX)
+    plt.ylabel('Total mean roa train !')
+    title = 'ROA_%s_targets-baseline'%(len(TARGET_ID_LIST))
     plt.title(title)
-    plt.show()
+
+    plt.figure(figsize=(20, 5))
+    plt.figure(2)
+    plt.axis([0,len(GLOBAL_R),-30,10])
+    plt.plot(np.arange(len(GLOBAL_R)), GLOBAL_R, color="b")
+    plt.xlabel('hundred episodes')
+    plt.ylabel('Total mean reward train!')
+    title = 'Reward_%s_targets-baseline'%(len(TARGET_ID_LIST))
+    plt.title(title)

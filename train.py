@@ -81,15 +81,17 @@ if __name__ == "__main__":
     plt.plot(np.arange(len(ROA_SHOW_TRAIN)), ROA_SHOW_TRAIN, color="r")
     plt.xlabel('hundred episodes')
     plt.ylabel('Total mean roa train !')
-    plt.title('[ROA] :'+now_time)
+    title = 'ROA_%s_targets-my-net'%(len(TARGET_ID_LIST))
+    plt.title(title+now_time)
 
     plt.figure(figsize=(20, 5))
     plt.figure(2)
-    plt.axis([0,len(REWARD_SHOW_TRAIN),-30,10])
+    plt.axis([0,len(REWARD_SHOW_TRAIN),-20,20])
     plt.plot(np.arange(len(REWARD_SHOW_TRAIN)), REWARD_SHOW_TRAIN, color="b")
     plt.xlabel('hundred episodes')
     plt.ylabel('Total mean reward train!')
-    plt.title('[ROA] :'+now_time)
+    title = 'Reward_%s_targets-my-net'%(len(TARGET_ID_LIST))
+    plt.title(title+now_time)
 
 
 
