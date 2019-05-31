@@ -34,8 +34,8 @@ LOG_DIR = './log'
 MAX_GLOBAL_EP = MAX_GLOBAL_EP
 GLOBAL_NET_SCOPE = 'Global_Net'
 UPDATE_GLOBAL_ITER = 10
-LR_A = 0.0001  # learning rate for actor
-LR_C = 0.0001  # learning rate for critic
+LR_A = 0.00005  # learning rate for actor
+LR_C = 0.00005  # learning rate for critic
 GLOBAL_RUNNING_R = []
 GLOBAL_EP = 0
 ENTROPY_BETA = 0.1
@@ -44,14 +44,6 @@ N_A = 4
 
 
 device = "/gpu:0"
-
-GLOBAL_R = []
-GLOBAL_ROA = []
-GLOBAL_EP = 0
-GLOBAL_EP_LIST = []
-GLOBAL_R_MEAN_LIST = []
-GLOBAL_ROA_MEAN_LIST = []
-
 
 class ACNet(object):
     def __init__(self, scope, globalAC=None):
@@ -147,7 +139,7 @@ class ACNet(object):
 
     def _prepare_global_loss(self,scope):
         with tf.name_scope(scope+'global_loss'):
-            self.global_td = tf.subtract(self.global_q,  self.global_v, name='global_TD_error')
+            self.global_td = tf.subtract(self.global_q,  self.global_v, name='global_Advantage')
             with tf.name_scope('global_c_loss'):
                 self.global_c_loss = tf.reduce_mean(tf.square(self.global_td))
 
@@ -180,11 +172,8 @@ class ACNet(object):
 
     def _prepare_pull_op(self,scope):
         with tf.name_scope(scope+'pull_global_params'):
-            self.pull_a_params_global = [l_p.assign(g_p) for l_p, g_p in
-                                         zip(self.global_a_params, self.global_AC.global_a_params)]
-            self.pull_c_params_global = [l_p.assign(g_p) for l_p, g_p in
-                                         zip(self.global_c_params, self.global_AC.global_c_params)]
-
+            self.pull_a_params_global = [l_p.assign(g_p) for l_p, g_p in zip(self.global_a_params, self.global_AC.global_a_params)]
+            self.pull_c_params_global = [l_p.assign(g_p) for l_p, g_p in zip(self.global_c_params, self.global_AC.global_c_params)]
 
     def update(self, feed_dict):  # run by a local
         SESS.run([self.update_global_a_op, self.update_global_c_op], feed_dict)  # local grads applies to global net
@@ -213,11 +202,13 @@ def generate_fc_bias(shape, name):
 
 class Worker(object):
     def __init__(self, name, globalAC):
-        env = load_thor_env(scene_name='bedroom_04' , random_start=True,
-                            random_terminal=True , whe_show=False,
-                            terminal_id=None , start_id=None, whe_use_image=None,
-                            whe_flatten=False, num_of_frames=1)
-        self.env = env
+        self.env = load_thor_env(
+                                 scene_name      ='bedroom_04' , random_start = True ,
+                                 random_terminal =True         , whe_show     = False,
+                                 terminal_id     =None         , start_id     = None,
+                                 whe_use_image   =None         , whe_flatten  = False,
+                                 num_of_frames   =1
+                                 )
         self.name = name
         self.AC = ACNet(scope=name, globalAC=globalAC)
 
@@ -263,10 +254,10 @@ class Worker(object):
                     buffer_s, buffer_a, buffer_t = np.vstack(buffer_s), np.array(buffer_a), np.vstack(buffer_t)
                     buffer_q = np.vstack(buffer_q)
                     feed_dict = {
-                        self.AC.s: buffer_s,
-                        self.AC.a: buffer_a,
-                        self.AC.global_q: buffer_q,
-                        self.AC.t: buffer_t,
+                        self.AC.s        : buffer_s,
+                        self.AC.a        : buffer_a,
+                        self.AC.global_q : buffer_q,
+                        self.AC.t        : buffer_t,
                     }
                     self.AC.update(feed_dict)
                     buffer_s, buffer_a, buffer_r, buffer_t = [], [], [], []
@@ -307,6 +298,14 @@ class Worker(object):
 
 
 if __name__ == "__main__":
+
+    GLOBAL_R = []
+    GLOBAL_ROA = []
+    GLOBAL_EP = 0
+    GLOBAL_EP_LIST = []
+    GLOBAL_R_MEAN_LIST = []
+    GLOBAL_ROA_MEAN_LIST = []
+
     SESS = tf.Session()
 
     with tf.device(device):
@@ -342,14 +341,14 @@ if __name__ == "__main__":
     plt.plot(np.arange(len(GLOBAL_ROA)), GLOBAL_ROA, color="r")
     plt.xlabel('hundred episodes')
     plt.ylabel('Total mean roa train !')
-    title = 'ROA_%s_targets-baseline'%(len(TARGET_ID_LIST))
+    title = 'ROA_%stargets-baseline'%(len(TARGET_ID_LIST))
     plt.title(title)
 
     plt.figure(figsize=(20, 5))
     plt.figure(2)
-    plt.axis([0,len(GLOBAL_R),-30,10])
+    plt.axis([0,len(GLOBAL_R),-20,10])
     plt.plot(np.arange(len(GLOBAL_R)), GLOBAL_R, color="b")
     plt.xlabel('hundred episodes')
     plt.ylabel('Total mean reward train!')
-    title = 'Reward_%s_targets-baseline'%(len(TARGET_ID_LIST))
+    title = 'Reward_%stargets-baseline'%(len(TARGET_ID_LIST))
     plt.title(title)
