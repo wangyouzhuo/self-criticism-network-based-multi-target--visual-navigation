@@ -35,18 +35,12 @@ MAX_GLOBAL_EP = MAX_GLOBAL_EP
 GLOBAL_NET_SCOPE = 'Global_Net'
 UPDATE_GLOBAL_ITER = 10
 LR_A = 0.0001  # learning rate for actor
-LR_C = 0.0002  # learning rate for critic
+LR_C = 0.0001  # learning rate for critic
 GLOBAL_RUNNING_R = []
 GLOBAL_EP = 0
 ENTROPY_BETA = 0.1
 N_S = 2048
 N_A = 4
-
-KL_MIN = 0.015
-KL_MAX = 0.02
-
-BETA_REG_VALUE = 0.5
-BETA_REG_ACTION = 0.5
 
 
 device = "/gpu:0"
@@ -77,8 +71,7 @@ class ACNet(object):
 
                     self.s = tf.placeholder(tf.float32, [None, N_S], 'S')
                     self.a = tf.placeholder(tf.int32, [None, ], 'A')
-                    self.global_v_target  = tf.placeholder(tf.float32, [None, 1], 'global_Vtarget')
-                    self.special_v_target = tf.placeholder(tf.float32, [None, 1], 'global_Vtarget')
+                    self.global_q  = tf.placeholder(tf.float32, [None, 1], 'global_Q_value')
                     self.t = tf.placeholder(tf.float32, [None, N_S], 'T')
 
                     self.global_a_prob,self.global_v,self.global_a_params,self.global_c_params=self._build_global_net(scope)
@@ -154,7 +147,7 @@ class ACNet(object):
 
     def _prepare_global_loss(self,scope):
         with tf.name_scope(scope+'global_loss'):
-            self.global_td = tf.subtract(self.global_v_target,  self.global_v, name='global_TD_error')
+            self.global_td = tf.subtract(self.global_q,  self.global_v, name='global_TD_error')
             with tf.name_scope('global_c_loss'):
                 self.global_c_loss = tf.reduce_mean(tf.square(self.global_td))
 
@@ -260,26 +253,24 @@ class Worker(object):
                     if done:
                         v_global = 0 # terminal
                     else:
-                        v_global = SESS.run(self.AC.global_v, {self.AC.s: s_[np.newaxis, :],self.AC.t: t[np.newaxis, :]})[0, 0]\
-                                            # ,SESS.run(self.AC.special_v,{self.AC.s: s_[np.newaxis, :],self.AC.t: t[np.newaxis, :]})[0, 0]
-
-                    buffer_v_global,buffer_v_special = [],[]
+                        v_global = SESS.run(self.AC.global_v, {self.AC.s: s_[np.newaxis, :],self.AC.t: t[np.newaxis, :]})[0, 0]
+                    buffer_q = []
 
                     for r in buffer_r[::-1]:  # reverse buffer r
                         v_global = r + GAMMA * v_global
-                        buffer_v_global.append(v_global)
-                    buffer_v_global.reverse()
+                        buffer_q.append(v_global)
+                    buffer_q.reverse()
                     buffer_s, buffer_a, buffer_t = np.vstack(buffer_s), np.array(buffer_a), np.vstack(buffer_t)
-                    buffer_v_global = np.vstack(buffer_v_global)
+                    buffer_q = np.vstack(buffer_q)
                     feed_dict = {
                         self.AC.s: buffer_s,
                         self.AC.a: buffer_a,
-                        self.AC.global_v_target: buffer_v_global,
+                        self.AC.global_q: buffer_q,
                         self.AC.t: buffer_t,
                     }
                     self.AC.update(feed_dict)
                     buffer_s, buffer_a, buffer_r, buffer_t = [], [], [], []
-                    buffer_v_global,buffer_v_special = [],[]
+                    buffer_q = []
                     self.AC.pull()
                 s = s_
                 total_step += 1
@@ -293,25 +284,24 @@ class Worker(object):
                         GLOBAL_EP_LIST.append(GLOBAL_EP)
                         GLOBAL_R_MEAN_LIST.append(ep_r)
                         GLOBAL_ROA_MEAN_LIST.append(roa)
-                        if GLOBAL_EP > 100:
-                            if GLOBAL_EP % 200 == 0:
-                                GLOBAL_R.append(self.average(GLOBAL_R_MEAN_LIST))
-                                GLOBAL_R_MEAN_LIST = []
-                                GLOBAL_ROA.append(self.average(GLOBAL_ROA_MEAN_LIST))
-                                GLOBAL_ROA_MEAN_LIST = []
-                                if len(GLOBAL_ROA) > 1:
-                                    print(
-                                        "Epi:%5d" % GLOBAL_EP,
-                                        "|| Success: %5s" % done,
-                                        "|| Steps:%4d" % step_in_episode,
-                                        "|| Start:%3d" % self.env.start_state_id,
-                                        "|| End:%3d" % self.env.terminal_state_id,
-                                        "|| Distance:%2d" % self.env.short_dist,
-                                        "|| ROA：%1.3f" % roa,
-                                        "|| env_Reward：%6s" % round(ep_r, 2),
-                                        "|| mean_r: %7s" % round(GLOBAL_R[-1], 3),
-                                        "|| mean_roa: %6s" % round(GLOBAL_ROA[-1], 4),
-                                    )
+                        if GLOBAL_EP % 200 == 0:
+                            GLOBAL_R.append(self.average(GLOBAL_R_MEAN_LIST))
+                            GLOBAL_R_MEAN_LIST = []
+                            GLOBAL_ROA.append(self.average(GLOBAL_ROA_MEAN_LIST))
+                            GLOBAL_ROA_MEAN_LIST = []
+                            if len(GLOBAL_ROA) > 1:
+                                print(
+                                    "Epi:%5d" % GLOBAL_EP,
+                                    "|| Success: %5s" % done,
+                                    "|| Steps:%4d" % step_in_episode,
+                                    "|| Start:%3d" % self.env.start_state_id,
+                                    "|| End:%3d" % self.env.terminal_state_id,
+                                    "|| Distance:%2d" % self.env.short_dist,
+                                    "|| ROA：%1.3f" % roa,
+                                    "|| env_Reward：%6s" % round(ep_r, 2),
+                                    "|| mean_r: %7s" % round(GLOBAL_R[-1], 3),
+                                    "|| mean_roa: %6s" % round(GLOBAL_ROA[-1], 4),
+                                )
                     GLOBAL_EP += 1
                     break
 

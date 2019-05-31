@@ -149,8 +149,8 @@ def _init_kl_beta():
 def _increase_kl_beta():
     global GLOBAL_KL_BETA
     GLOBAL_KL_BETA = GLOBAL_KL_BETA + 0.0005
-    if GLOBAL_KL_BETA > 0.01:
-        GLOBAL_KL_BETA = 0.01
+    if GLOBAL_KL_BETA > 0.1:
+        GLOBAL_KL_BETA = 0.1
 
 def _decrease_kl_beta():
     global GLOBAL_KL_BETA
