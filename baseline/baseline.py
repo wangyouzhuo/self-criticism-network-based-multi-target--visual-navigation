@@ -34,8 +34,10 @@ LOG_DIR = './log'
 MAX_GLOBAL_EP = MAX_GLOBAL_EP
 GLOBAL_NET_SCOPE = 'Global_Net'
 UPDATE_GLOBAL_ITER = 10
+
 LR_A = 0.00005  # learning rate for actor
-LR_C = 0.00005  # learning rate for critic
+LR_C = 0.00005 # learning rate for critic
+
 GLOBAL_RUNNING_R = []
 GLOBAL_EP = 0
 ENTROPY_BETA = 0.1
@@ -276,10 +278,10 @@ class Worker(object):
                         GLOBAL_R_MEAN_LIST.append(ep_r)
                         GLOBAL_ROA_MEAN_LIST.append(roa)
                         if GLOBAL_EP % 200 == 0:
-                            GLOBAL_R.append(self.average(GLOBAL_R_MEAN_LIST))
-                            GLOBAL_R_MEAN_LIST = []
-                            GLOBAL_ROA.append(self.average(GLOBAL_ROA_MEAN_LIST))
-                            GLOBAL_ROA_MEAN_LIST = []
+                            roa_mean,reward_mean = self.average(GLOBAL_ROA_MEAN_LIST),self.average(GLOBAL_R_MEAN_LIST)
+                            GLOBAL_R_MEAN_LIST,GLOBAL_ROA_MEAN_LIST = [],[]
+                            GLOBAL_R.append(reward_mean)
+                            GLOBAL_ROA.append(roa_mean)
                             if len(GLOBAL_ROA) > 1:
                                 print(
                                     "Epi:%5d" % GLOBAL_EP,
@@ -290,8 +292,8 @@ class Worker(object):
                                     "|| Distance:%2d" % self.env.short_dist,
                                     "|| ROA：%1.3f" % roa,
                                     "|| env_Reward：%6s" % round(ep_r, 2),
-                                    "|| mean_r: %7s" % round(GLOBAL_R[-1], 3),
-                                    "|| mean_roa: %6s" % round(GLOBAL_ROA[-1], 4),
+                                    "|| mean_r: %7s" % round(reward_mean, 3),
+                                    "|| mean_roa: %6s" % round(roa_mean, 4),
                                 )
                     GLOBAL_EP += 1
                     break
@@ -309,8 +311,8 @@ if __name__ == "__main__":
     SESS = tf.Session()
 
     with tf.device(device):
-        OPT_A = tf.train.RMSPropOptimizer(LR_A, name='RMSPropA')
-        OPT_C = tf.train.RMSPropOptimizer(LR_C, name='RMSPropC')
+        OPT_A = tf.train.RMSPropOptimizer(LR_A , name='RMSPropA')
+        OPT_C = tf.train.RMSPropOptimizer(LR_C , name='RMSPropC')
         GLOBAL_AC = ACNet(GLOBAL_NET_SCOPE)  # we only need its params
         workers = []
         # Create worker
@@ -346,9 +348,11 @@ if __name__ == "__main__":
 
     plt.figure(figsize=(20, 5))
     plt.figure(2)
-    plt.axis([0,len(GLOBAL_R),-20,10])
+    plt.axis([0,len(GLOBAL_R),-20,20])
     plt.plot(np.arange(len(GLOBAL_R)), GLOBAL_R, color="b")
     plt.xlabel('hundred episodes')
     plt.ylabel('Total mean reward train!')
     title = 'Reward_%stargets-baseline'%(len(TARGET_ID_LIST))
     plt.title(title)
+
+    plt.show()

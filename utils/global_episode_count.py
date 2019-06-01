@@ -1,3 +1,5 @@
+from config.params import TARGET_ID_LIST
+
 
 # ----------------------------------global count--------------------------------
 def _init_train_count():
@@ -184,6 +186,47 @@ def _get_reward_roa_show():
     global REWARD_SHOW_TRAIN   , ROA_SHOW_TRAIN
     global REWARD_SHOW_EALUATE , ROA_SHOW_EVALUATE
     return REWARD_SHOW_TRAIN,ROA_SHOW_TRAIN,REWARD_SHOW_EALUATE,ROA_SHOW_EVALUATE
+
+#----------------------------------------------target_special_dict--------------------------------------------
+def _init_target_special_roa_dict():
+    global TARGET_SPECIAL_ROA_DICT,CURRENT_TARGET_ID_LIST
+    TARGET_SPECIAL_ROA_DICT = dict()
+    CURRENT_TARGET_ID_LIST = set(TARGET_ID_LIST)
+    for  target_id in TARGET_ID_LIST:
+        TARGET_SPECIAL_ROA_DICT[target_id] = []
+
+
+def _append_target_special_roa_dict(target_id,roa):
+    global TARGET_SPECIAL_ROA_DICT
+    TARGET_SPECIAL_ROA_DICT[target_id].append(roa)
+
+
+def _get_mean_target_special_roa_dict(target_id):
+    global TARGET_SPECIAL_ROA_DICT
+    if len(TARGET_SPECIAL_ROA_DICT[target_id])>3000:
+        return average(TARGET_SPECIAL_ROA_DICT[target_id][-300:]),TARGET_SPECIAL_ROA_DICT[target_id]
+    else:
+        return 0,TARGET_SPECIAL_ROA_DICT[target_id]
+
+
+#----------------------------------------- TARGET_ID_HAVE_BEEN_FINISHED------------------------------------
+
+def _init_targets_have_been_finished():
+    global TARGETS_HAVE_BEEN_FINISHED
+    TARGETS_HAVE_BEEN_FINISHED = set()
+
+def _append_init_targets_have_been_finished(target_id):
+    global TARGETS_HAVE_BEEN_FINISHED
+    if target_id.issubset(TARGETS_HAVE_BEEN_FINISHED):
+        pass
+    else:
+        TARGETS_HAVE_BEEN_FINISHED.add(target_id)
+        print("Target:%s has been finished! Special Workers have finished %s targets."%(target_id,len(TARGETS_HAVE_BEEN_FINISHED)))
+
+def _get_length_targets_have_been_finished():
+    global TARGETS_HAVE_BEEN_FINISHED
+    return len(TARGETS_HAVE_BEEN_FINISHED)
+
 
 
 
