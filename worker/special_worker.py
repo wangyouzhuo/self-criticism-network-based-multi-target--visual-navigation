@@ -64,12 +64,12 @@ class Spe_Worker(Worker):
                     total_step += 1
                     step_in_episode += 1
                     if done or step_in_episode >= MAX_STEP_IN_EPISODE:
-                        _append_target_special_roa_dict(target_id=target_id,roa=roa)
                         if done :
                             roa = round((self.env.short_dist*1.0/step_in_episode),4)
                         else:
                             roa = 0.000
-                        break
+                        _append_target_special_roa_dict(target_id=target_id,roa=roa)
+                    break
 
 
     def evaluate(self):

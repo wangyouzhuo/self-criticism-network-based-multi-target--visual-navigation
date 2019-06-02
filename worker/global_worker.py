@@ -111,8 +111,10 @@ class Glo_Worker(Worker):
                         if length_train>100  :
                             _append_reward_roa_show(r_evaluate=reward_eva , roa_evaluate=roa_eva,
                                                     r_train=reward_mean_train, roa_train=roa_mean_train)
-                            print("Train!     Epi:%6s || Glo_Roa:%6s  || Glo_Reward:%7s         Evaluate!  Epi:%6s || Roa_mean:%6s || Reward_mean:%7s "
-                              %(EPI_COUNT, round(roa_mean_train, 3), round(reward_mean_train, 2),EPI_COUNT,round(roa_eva,4),round(reward_eva,3)))
+                            # print("Train!     Epi:%6s || Glo_Roa:%6s  || Glo_Reward:%7s         Evaluate!  Epi:%6s || Roa_mean:%6s || Reward_mean:%7s "
+                            #   %(EPI_COUNT, round(roa_mean_train, 3), round(reward_mean_train, 2),EPI_COUNT,round(roa_eva,4),round(reward_eva,3)))
+                            print("Train %s targets!     Epi:%6s || Glo_Roa:%6s  || Glo_Reward:%7s "
+                                  %(len(TARGET_ID_LIST),EPI_COUNT,round(roa_mean_train, 3), round(reward_mean_train,2)))
                     break
 
     def evaluate(self):

@@ -10,7 +10,7 @@ from utils.global_episode_count import _init_kl_beta
 from utils.global_episode_count import _init_steps_count,_add_steps_count,_reset_steps_count
 from utils.global_episode_count import _init_reward_roa_show,_append_reward_roa_show,_get_reward_roa_show
 from utils.global_episode_count import _init_target_special_roa_dict
-from utils.global_episode_count import _in
+from utils.global_episode_count import _init_targets_have_been_finished
 from model.model import *
 from config.params import *
 from config.constant import *
@@ -50,6 +50,7 @@ if __name__ == "__main__":
     _init_result_mean_list()
     _init_reward_roa_show()
     _init_target_special_roa_dict()
+    _init_targets_have_been_finished()
 
 
 

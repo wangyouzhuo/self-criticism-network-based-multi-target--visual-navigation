@@ -217,7 +217,7 @@ def _init_targets_have_been_finished():
 
 def _append_init_targets_have_been_finished(target_id):
     global TARGETS_HAVE_BEEN_FINISHED
-    if target_id.issubset(TARGETS_HAVE_BEEN_FINISHED):
+    if target_id in TARGETS_HAVE_BEEN_FINISHED:
         pass
     else:
         TARGETS_HAVE_BEEN_FINISHED.add(target_id)
