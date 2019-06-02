@@ -203,7 +203,7 @@ def _append_target_special_roa_dict(target_id,roa):
 
 def _get_mean_target_special_roa_dict(target_id):
     global TARGET_SPECIAL_ROA_DICT
-    if len(TARGET_SPECIAL_ROA_DICT[target_id])>3000:
+    if len(TARGET_SPECIAL_ROA_DICT[target_id])>500:
         return average(TARGET_SPECIAL_ROA_DICT[target_id][-300:]),TARGET_SPECIAL_ROA_DICT[target_id]
     else:
         return 0,TARGET_SPECIAL_ROA_DICT[target_id]
