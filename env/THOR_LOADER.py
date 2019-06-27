@@ -9,6 +9,7 @@ from skimage.transform import resize
 import tensorflow as tf
 from config.constant import *
 from config.params import *
+import cv2
 
 
 SCREEN_WIDTH = 84
@@ -26,16 +27,18 @@ class THORDiscreteEnvironment(object):
 
     # configurations
     self.scene_name          = config.get('scene_name', 'bedroom_04')
+
     self.random_start        = config.get('random_start', True)
     self.random_terminal     = config.get('random_terminal',False)
-    self.terminal_state_id   = config.get('terminal_state_id', 1)
-    self.start_state_id      = config.get('start_state_id',1)
+
+    self.terminal_state_id   = config.get('terminal_state_id', 406)
+    self.start_state_id      = config.get('start_state_id',0)
     self.number_of_frames    = config.get('number_of_frames',1)
     self.whe_flatten         = config.get('flatten_or_not',True)
     self.whe_use_image       = config.get('whe_use_image',False)
     self.whe_show_observation= config.get('whether_show' ,False)
     self.h5_file_path = config.get('h5_file_path', 'data/%s.h5'%self.scene_name)
-    self.h5_file      = h5py.File(self.h5_file_path, 'r')
+    self.h5_file     = h5py.File(self.h5_file_path, 'r')
     self.locations   = self.h5_file['location'][()]
     self.rotations   = self.h5_file['rotation'][()]
     self.n_locations = self.locations.shape[0]
@@ -72,7 +75,6 @@ class THORDiscreteEnvironment(object):
       self.start_state_id = random_start_id
     else:
       pass
-
     self.current_state_id = self.start_state_id
     # reset parameters
     self.short_dist = self.shortest_path_distances[self.start_state_id][self.terminal_state_id]
@@ -87,10 +89,12 @@ class THORDiscreteEnvironment(object):
 
 
   def take_action(self, action):
-    assert not self.terminal  , 'step() called in terminal_state'
+    #assert not self.terminal  , 'step() called in terminal_state'
+    currrent_id = self.current_state_id
     if self.transition_graph[self.current_state_id][action] != -1:
       self.collided = False
       self.current_state_id = self.transition_graph[self.current_state_id][action].reshape([-1])[0]
+      next_id = self.current_state_id
       # print("self.terminal_state_id:%3s  ||  self.current_state_id:%3s"%(self.terminal_state_id,self.current_state_id))
       if self.terminal_state_id == self.current_state_id:
         self.terminal = True
@@ -99,9 +103,14 @@ class THORDiscreteEnvironment(object):
     else:
       self.terminal = False
       self.collided = True
+      next_id = self.current_state_id
     reward = self.reward_env(self.terminal, self.collided)
     self.step_count = self.step_count + 1
-    return self.state,reward,self.terminal,self.current_distance
+    return self.state,reward,self.terminal,(currrent_id,next_id)
+
+
+  def get_id_state(self,id):
+    return self.h5_file['resnet_feature'][id][0][:,np.newaxis].reshape([1,-1])[0]
 
 
   # s_t = s_t1
@@ -163,8 +172,6 @@ class THORDiscreteEnvironment(object):
     else:
       return self.h5_file['resnet_feature'][self.terminal_state_id][0][:,np.newaxis].reshape([1,-1])[0]
 
-
-
   #
   @property
   def target(self):
@@ -198,6 +205,8 @@ def load_thor_env(scene_name,random_start,random_terminal,
       raise NameError('You can not use image and flate the state together!')
       return
     config = {
+        'terminal_state_id':terminal_id,
+        'start_state_id'   :start_id,
         'scene_name':scene_name,
         'random_start':random_start,
         'random_terminal': random_terminal,
@@ -208,7 +217,7 @@ def load_thor_env(scene_name,random_start,random_terminal,
         'whe_use_image':whe_use_image,
         'whether_show':whe_show,
         'h5_file_path': ROOT_PATH + '/data/%s.h5'%scene_name,
-        'h5_file_path': '/data1/wyz/PyProject/distill-based-multi-target-visual-naviigation'+'/data/%s.h5'%scene_name, # data path for my ubuntu server
+        #-'h5_file_path': '/data1/wyz/PyProject/distill-based-multi-target-visual-naviigation'+'/data/%s.h5'%scene_name, # data path for my ubuntu server
 
     }
     env = THORDiscreteEnvironment(config)
@@ -221,9 +230,12 @@ def get_dim(self):
 
 
 if __name__ == "__main__":
-  env = load_thor_env(scene_name='bedroom_04', random_start=RANDOM_START, random_terminal=RANDOM_TERMINAL,
-                      whe_show=WHE_SHOW, terminal_id=TERMINAL_ID, start_id=START_ID, whe_use_image=WHE_USE_IMAGE,
+  env = load_thor_env(scene_name='bedroom_04', random_start=True, random_terminal=True,
+                      whe_show=True, terminal_id=True, start_id=True, whe_use_image=True,
                       whe_flatten=False, num_of_frames=1)
+
+  cv2.imshow('fuck',env.observation)
+
   cur_state  = env.state
   tar_state  = env.state
 
@@ -235,7 +247,7 @@ if __name__ == "__main__":
   print(tar_state)
 
 
-  from PIL import Image
-  import numpy as n
-  im = Image.fromarray(raw_state)
-  im.show()
+  # from PIL import Image
+  # import numpy as n
+  # im = Image.fromarray(env.observation)
+  # im.show()

@@ -143,6 +143,25 @@ def _get_steps_count():
     return GLOBAL_STEPS_COUNT
 
 
+
+#----------------------------------------------global_max_reward------------------------------------------
+def _init_max_reward():
+    global GLOBAL_MAX_REWARD
+    GLOBAL_MAX_REWARD = 0
+
+def _get_max_reward():
+    global GLOBAL_MAX_REWARD
+    return GLOBAL_MAX_REWARD
+
+def _update_max_reward(max_reward):
+    global GLOBAL_MAX_REWARD
+    GLOBAL_MAX_REWARD = max_reward
+
+
+
+
+
+
 #----------------------------------------------KL_BETA------------------------------------------
 def _init_kl_beta():
     global GLOBAL_KL_BETA
@@ -173,12 +192,12 @@ def _init_reward_roa_show():
     REWARD_SHOW_EALUATE , ROA_SHOW_EVALUATE = [],[]
 
 
-def _append_reward_roa_show(r_train,roa_train,r_evaluate,roa_evaluate):
+def _append_reward_roa_show(reward_train,roa_train,reward_evaluate,roa_evaluate):
     global REWARD_SHOW_TRAIN   , ROA_SHOW_TRAIN
     global REWARD_SHOW_EALUATE , ROA_SHOW_EVALUATE
-    REWARD_SHOW_TRAIN.append(r_train)
+    REWARD_SHOW_TRAIN.append(reward_train)
     ROA_SHOW_TRAIN.append(roa_train)
-    REWARD_SHOW_EALUATE.append(r_evaluate)
+    REWARD_SHOW_EALUATE.append(reward_evaluate)
     ROA_SHOW_EVALUATE.append(roa_evaluate)
 
 
@@ -221,7 +240,7 @@ def _append_init_targets_have_been_finished(target_id):
         pass
     else:
         TARGETS_HAVE_BEEN_FINISHED.add(target_id)
-        print("Target:%s has been finished! Special Workers have finished %s targets."%(target_id,len(TARGETS_HAVE_BEEN_FINISHED)))
+        print("Target_id_[%s] has been finished! Special Workers have finished %s targets."%(target_id,len(TARGETS_HAVE_BEEN_FINISHED)))
 
 def _get_length_targets_have_been_finished():
     global TARGETS_HAVE_BEEN_FINISHED

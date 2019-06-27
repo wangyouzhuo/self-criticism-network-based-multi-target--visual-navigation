@@ -16,7 +16,7 @@ import sys
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
-
+from utils.op import *
 import gym
 import os
 import shutil
@@ -28,6 +28,8 @@ import tensorflow as tf
 import threading
 from env.THOR_LOADER import load_thor_env, get_dim
 from matplotlib import pyplot as plt
+from utils.op import output_record
+import pandas as pd
 
 OUTPUT_GRAPH = True
 LOG_DIR = './log'
@@ -44,10 +46,13 @@ ENTROPY_BETA = 0.1
 N_S = 2048
 N_A = 4
 
+BEST_REWARD = 0
+BEST_DICT = None
 
 device = "/gpu:0"
 
 class ACNet(object):
+
     def __init__(self, scope, globalAC=None):
         tf.set_random_seed(1)
         with tf.device(device):
@@ -224,11 +229,12 @@ class Worker(object):
     def work(self):
         global GLOBAL_R, GLOBAL_EP, GLOBAL_SUM, GLOBAL_R_MEAN_LIST, GLOBAL_EP_LIST
         global GLOBAL_ROA_MEAN_LIST, GLOBAL_ROA
+        global BEST_REWARD,BEST_DICT
 
         total_step = 1
-        buffer_s, buffer_a, buffer_r, buffer_t = [], [], [], []
         while not COORD.should_stop() and GLOBAL_EP < MAX_GLOBAL_EP:
             s, t = self.env.reset_env()
+            buffer_s, buffer_a, buffer_r, buffer_t = [], [], [], []
             target_id = self.env.terminal_state_id
             ep_r = 0
             step_in_episode = 0
@@ -277,11 +283,14 @@ class Worker(object):
                         GLOBAL_EP_LIST.append(GLOBAL_EP)
                         GLOBAL_R_MEAN_LIST.append(ep_r)
                         GLOBAL_ROA_MEAN_LIST.append(roa)
-                        if GLOBAL_EP % 200 == 0:
+                        if GLOBAL_EP % 100 == 0:
                             roa_mean,reward_mean = self.average(GLOBAL_ROA_MEAN_LIST),self.average(GLOBAL_R_MEAN_LIST)
                             GLOBAL_R_MEAN_LIST,GLOBAL_ROA_MEAN_LIST = [],[]
                             GLOBAL_R.append(reward_mean)
                             GLOBAL_ROA.append(roa_mean)
+                            if reward_mean>BEST_REWARD:
+                                BEST_REWARD = reward_mean
+                                BEST_DICT = self.experiment_one()
                             if len(GLOBAL_ROA) > 1:
                                 print(
                                     "Epi:%5d" % GLOBAL_EP,
@@ -297,6 +306,31 @@ class Worker(object):
                                 )
                     GLOBAL_EP += 1
                     break
+        # evaluate
+
+    def experiment_one(self):
+        TARGET_ID = 360
+        target_state = self.env.get_id_state(TARGET_ID)
+        result_dict = dict()
+        for CURRENT_ID in [361,363,300,302,328,330,333,
+                           335,48,50,53,55,96,95,101,
+                           103,160,162,165,167,69,71,
+                           72, 74, 125, 127, 200, 202,
+                           205, 207, 261, 263, 264, 266,
+                           369, 371, 377, 379, 380, 382,
+                           40, 42, 45, 47,0, 2, 9, 11,
+                           21, 23, 28, 30]:
+            current_state = self.env.get_id_state(CURRENT_ID)
+            v = SESS.run(self.AC.global_v,
+                                {self.AC.s: current_state[np.newaxis, :],
+                                 self.AC.t: target_state[np.newaxis , :]
+                                 }
+                                )[0, 0]
+            result_dict[CURRENT_ID] = [v]
+        return result_dict
+
+
+
 
 
 if __name__ == "__main__":
@@ -354,5 +388,17 @@ if __name__ == "__main__":
     plt.ylabel('Total mean reward train!')
     title = 'Reward_%stargets-baseline'%(len(TARGET_ID_LIST))
     plt.title(title)
-
     plt.show()
+
+    # result_list,attribute_name,target_id,file_path
+    filepath = '/home/wyz/PycharmProjects/self-criticism-network-based-multi-target--visual-navigation/output_record/baseline.csv'
+    output_record(result_list=GLOBAL_R,attribute_name='mean_rewards',
+                  target_count=len(TARGET_ID_LIST),file_path=filepath)
+
+    # resultpath = '/home/wyz/PycharmProjects/self-criticism-network-based-multi-target--visual-navigation/output_record/target360_bad_baseline.csv'
+    # pd_result = pd.DataFrame(BEST_DICT)
+    # dataframe2csv(pd_result,output_path=resultpath)
+
+
+
+

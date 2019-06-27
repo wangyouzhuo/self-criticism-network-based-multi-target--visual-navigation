@@ -1,4 +1,4 @@
-from  model.model import *
+from model.model import *
 from env.THOR_LOADER import *
 from utils.global_episode_count import _get_evaluate_count,_add_evaluate_count,_init_evaluate_count,\
     _evaluate_list_mean,_reset_evaluate_count

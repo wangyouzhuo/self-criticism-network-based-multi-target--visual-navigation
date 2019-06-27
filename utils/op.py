@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+import pandas as pd
 
 
 def generate_fc_weight(shape, name):
@@ -35,3 +36,19 @@ def average(target):
         sum = sum + item
     mean = sum * 1.0 / len(target)
     return mean
+
+
+def dataframe2csv(pd_data,output_path):
+    pd_data.to_csv(output_path,mode='a',header=True)
+
+
+def csv2dataframe(input_path):
+    df = pd.read_csv(input_path, encoding="gbk")
+    return df
+
+
+def output_record(result_list,attribute_name,target_count,file_path):
+    title = str(target_count)+"_"+str(attribute_name)
+    data = {title:result_list}
+    result_pd = pd.DataFrame(data)
+    dataframe2csv(result_pd,file_path)

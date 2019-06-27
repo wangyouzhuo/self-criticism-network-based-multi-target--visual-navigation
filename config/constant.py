@@ -1,5 +1,16 @@
 
-ROOT_PATH = '/home/wyz/PycharmProjects/distill_based_visual_navigation_in_indoor/'
+# my_linux
+ROOT_PATH = '/home/wyz/PycharmProjects/self-criticism-network-based-multi-target--visual-navigation/'
+
+# my_4card_server
+#ROOT_PATH = '/data1/wyz/PyProject/memory-based-visual-navigation/'
+
+# my_mac
+#ROOT_PATH = '/user/wyz/PycharmProjects/distill_based_visual_navigation_in_indoor/'
+
+
+
+
 
 GAMMA                = 0.95
 

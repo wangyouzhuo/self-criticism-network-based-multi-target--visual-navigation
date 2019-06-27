@@ -5,6 +5,7 @@ from utils.global_episode_count import _append_kl_list,_reset_kl_list,_get_kl_me
 from utils.global_episode_count import _increase_kl_beta,_decrease_kl_beta,_get_kl_beta
 from utils.global_episode_count import _init_result_mean_list,_append_result_mean_list,_reset_result_mean_list,_get_train_mean_roa_reward
 from utils.global_episode_count import _init_reward_roa_show,_append_reward_roa_show,_get_reward_roa_show
+from utils.global_episode_count import _get_max_reward,_update_max_reward
 from config.constant import *
 import numpy as np
 from worker.worker import Worker
@@ -88,7 +89,7 @@ class Glo_Worker(Worker):
                         self.AC.a: buffer_a,
                         self.AC.t: buffer_t,
                         self.AC.kl_beta:[kl_beta],
-                        #self.AC.kl_beta:[0.0],
+                        # self.AC.kl_beta:[0.0],
                         self.AC.adv:buffer_advantage
                        }
                     self.AC.update_global(feed_dict)
@@ -103,23 +104,40 @@ class Glo_Worker(Worker):
                     else:
                         roa = 0.000
                     _append_result_mean_list(roa,ep_r)
-                    if EPI_COUNT%200 == 0:
+                    if EPI_COUNT%100 == 0:
                         roa_mean_train,reward_mean_train,length_train = _get_train_mean_roa_reward()
                         _reset_result_mean_list()
                         #roa_eva,reward_eva,lenght_eva = self.evaluate()
                         roa_eva,reward_eva,lenght_eva = 0,0,0
-                        if length_train>100  :
-                            _append_reward_roa_show(r_evaluate=reward_eva , roa_evaluate=roa_eva,
-                                                    r_train=reward_mean_train, roa_train=roa_mean_train)
-                            # print("Train!     Epi:%6s || Glo_Roa:%6s  || Glo_Reward:%7s         Evaluate!  Epi:%6s || Roa_mean:%6s || Reward_mean:%7s "
-                            #   %(EPI_COUNT, round(roa_mean_train, 3), round(reward_mean_train, 2),EPI_COUNT,round(roa_eva,4),round(reward_eva,3)))
-                            print("Train %s targets!     Epi:%6s || Glo_Roa:%6s  || Glo_Reward:%7s "
-                                  %(len(TARGET_ID_LIST),EPI_COUNT,round(roa_mean_train, 3), round(reward_mean_train,2)))
+                        _append_reward_roa_show(
+                                                reward_evaluate = reward_eva       ,
+                                                roa_evaluate    = roa_eva          ,
+                                                reward_train    = reward_mean_train,
+                                                roa_train       = roa_mean_train
+                                                )
+                        # print("Train!     Epi:%6s || Glo_Roa:%6s  || Glo_Reward:%7s         Evaluate!  Epi:%6s || Roa_mean:%6s || Reward_mean:%7s "
+                        #   %(EPI_COUNT, round(roa_mean_train, 3), round(reward_mean_train, 2),EPI_COUNT,round(roa_eva,4),round(reward_eva,3)))
+                        print("Train %s targets!     Epi:%6s || Glo_Roa:%6s  || Glo_Reward:%7s "
+                            %(len(TARGET_ID_LIST) ,EPI_COUNT ,round(roa_mean_train, 3), round(reward_mean_train,2)))
+                        if reward_mean_train>9.0 and reward_mean_train > _get_max_reward():
+                            _update_max_reward(reward_mean_train)
+                            path = ROOT_PATH + "/weight/"+str(len(TARGET_ID_LIST))+"_Targets"+".ckpt"
+                            self.AC.global_AC.store(path)
+                            print("store!")
+
                     break
 
     def evaluate(self):
         roa,reward,length = super().evaluate()
         return roa,reward,length
+
+
+    def evaluate_generalization(self):
+        env = load_thor_env(scene_name='bedroom_04', random_start=True, random_terminal=True,
+                            whe_show=False, terminal_id=None, start_id=None, whe_use_image=False,
+                            whe_flatten=False, num_of_frames=1)
+        self.env = env
+
 
 
 

@@ -13,13 +13,19 @@ class ACNet(object):
             self.dim_s = N_S
             self.session = session
 
-            if scope == 'Global_Net':
-                with tf.variable_scope(scope):
-                    self.s = tf.placeholder(tf.float32, [None, self.dim_s], 'State')
-                    self.t = tf.placeholder(tf.float32, [None, self.dim_s], 'Target')
 
-                    self.global_a_params = self._build_global_params_dict(scope)
-                    self.special_a_params_dict,self.special_c_params_dict = self._build_special_params_dict(scope)
+            if scope == 'Global_Net':
+                    with tf.variable_scope(scope):
+                        self.s = tf.placeholder(tf.float32, [None, self.dim_s], 'State')
+                        self.t = tf.placeholder(tf.float32, [None, self.dim_s], 'Target')
+
+                        self.global_a_params = self._build_global_params_dict(scope)
+                        self.special_a_params_dict,self.special_c_params_dict = self._build_special_params_dict(scope)
+
+
+                        var = tf.global_variables()
+                        var_to_restore = [val for val in var if 'conv1' in val.name or 'conv2'in val.name]
+
 
             elif type == 'Target_Special':
                 with tf.variable_scope(scope):
@@ -317,6 +323,15 @@ class ACNet(object):
     def get_special_value(self,feed_dict):
         special_value = self.session.run(self.special_v,feed_dict)
         return special_value
+
+
+    def _prepare_store(self):
+        var = tf.global_variables()
+        var_to_restore = [val for val in var if 'Global_Net' in val.name ]
+        self.saver = tf.train.Saver(var_to_restore )
+
+    def store(self,weight_path):
+        self.saver.save(self.session,weight_path)
 
 
 
