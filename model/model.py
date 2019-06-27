@@ -23,10 +23,6 @@ class ACNet(object):
                         self.special_a_params_dict,self.special_c_params_dict = self._build_special_params_dict(scope)
 
 
-                        var = tf.global_variables()
-                        var_to_restore = [val for val in var if 'conv1' in val.name or 'conv2'in val.name]
-
-
             elif type == 'Target_Special':
                 with tf.variable_scope(scope):
 
