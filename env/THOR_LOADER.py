@@ -217,7 +217,7 @@ def load_thor_env(scene_name,random_start,random_terminal,
         'whe_use_image':whe_use_image,
         'whether_show':whe_show,
         'h5_file_path': ROOT_PATH + '/data/%s.h5'%scene_name,
-        #-'h5_file_path': '/data1/wyz/PyProject/distill-based-multi-target-visual-naviigation'+'/data/%s.h5'%scene_name, # data path for my ubuntu server
+        #-'h5_file_path': '/data1/wyz/PyProject/memory-based-visual-navigation'+'/data/%s.h5'%scene_name, # data path for my ubuntu server
 
     }
     env = THORDiscreteEnvironment(config)
