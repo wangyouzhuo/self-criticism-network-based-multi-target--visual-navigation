@@ -111,8 +111,11 @@ class generalization_evaluater(object):
                     s_,_, done, _ = self.env.take_action(a)
                     step = step + 1
                     if done and step<=N:
+                        print("-----------target:%s--------------------current_episode:%s----------------------------steps:%s-----------"%(TARGET_ID_EVALUATE.index(self.target_id),i,step))
                         count = count + 1
+                        break
                     elif step>N:
+                        print("-----------target:%s--------------------current_episode:%s----------------------------Fail!-----------"%(TARGET_ID_EVALUATE.index(self.target_id),i))
                         break
             else:
                 print("Error !")
@@ -133,6 +136,8 @@ if __name__ == '__main__':
         COORD = tf.train.Coordinator()
 
         weight_path = ROOT_PATH + '/weight/10_Targets.ckpt'
+
+        print('CURRENT EVALUATE:',weight_path)
 
         CURRENT_TARGETS_COUNT = 10
 

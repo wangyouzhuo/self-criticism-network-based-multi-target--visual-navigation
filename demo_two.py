@@ -9,7 +9,7 @@ import numpy as np
 """
 
 csv_path = '/home/wyz/PycharmProjects/self-criticism-network-based-mult' \
-           'i-target--visual-navigation/output_record/my_architecture_result.csv'
+           'i-target--visual-navigation/output_record/my_architecture_roa.csv'
 
 data_pd = pd.read_csv(csv_path)
 
@@ -43,11 +43,10 @@ print(result_dict.keys())
 for item in result_dict.keys():
     print(item,len(result_dict[item]))
 
-print(len(result_dict['50_mean_rewards']))
 
 result_pd = pd.DataFrame(result_dict,columns=result_dict.keys())
 
-xlsx_path ='/home/wyz/PycharmProjects/self-criticism-network-based-multi-target--visual-navigation/output_record/my_architecture_result.xlsx'
+xlsx_path ='/home/wyz/PycharmProjects/self-criticism-network-based-multi-target--visual-navigation/output_record/my_architecture_roa.xlsx'
 
 
 result_pd.to_excel(xlsx_path)

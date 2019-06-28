@@ -119,7 +119,7 @@ class Glo_Worker(Worker):
                         #   %(EPI_COUNT, round(roa_mean_train, 3), round(reward_mean_train, 2),EPI_COUNT,round(roa_eva,4),round(reward_eva,3)))
                         print("Train %s targets!     Epi:%6s || Glo_Roa:%6s  || Glo_Reward:%7s "
                             %(len(TARGET_ID_LIST) ,EPI_COUNT ,round(roa_mean_train, 3), round(reward_mean_train,2)))
-                        if reward_mean_train>9.0 and reward_mean_train > _get_max_reward():
+                        if reward_mean_train>9.0 and reward_mean_train > _get_max_reward() and roa_mean_train>0.5:
                             _update_max_reward(reward_mean_train)
                             path = ROOT_PATH + "/weight/"+str(len(TARGET_ID_LIST))+"_Targets"+".ckpt"
                             self.AC.global_AC.store(path)
