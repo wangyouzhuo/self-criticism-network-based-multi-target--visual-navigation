@@ -216,7 +216,8 @@ def load_thor_env(scene_name,random_start,random_terminal,
         'flatten_or_not':whe_flatten,
         'whe_use_image':whe_use_image,
         'whether_show':whe_show,
-        'h5_file_path': ROOT_PATH + '/data/%s.h5'%scene_name,
+        #'h5_file_path': ROOT_PATH + '/data/%s.h5'%scene_name,
+        'h5_file_path': '/home/wyz/PycharmProjects/distill_based_visual_navigation_in_indoor/' + '/data/%s.h5'%scene_name
         #-'h5_file_path': '/data1/wyz/PyProject/memory-based-visual-navigation'+'/data/%s.h5'%scene_name, # data path for my ubuntu server
 
     }
