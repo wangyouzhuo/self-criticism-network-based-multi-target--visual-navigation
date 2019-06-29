@@ -5,14 +5,11 @@ from tensorflow.python import pywrap_tensorflow
 import threading
 import tensorflow as tf
 import numpy as np
-
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = "0"
 
 
 result_dict = dict()
 N = 500
-weight_path = ROOT_PATH + '/weight/10_Targets.ckpt'
 device = '/cpu:0'
 
 
@@ -135,11 +132,11 @@ if __name__ == '__main__':
 
         COORD = tf.train.Coordinator()
 
-        weight_path = ROOT_PATH + '/weight/10_Targets.ckpt'
+        CURRENT_TARGETS_COUNT = 20
+
+        weight_path = ROOT_PATH + '/weight/%s_Targets.ckpt'%CURRENT_TARGETS_COUNT
 
         print('CURRENT EVALUATE:',weight_path)
-
-        CURRENT_TARGETS_COUNT = 10
 
         net = AC_Net(weight_path,session=SESS)
 
