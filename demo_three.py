@@ -18,6 +18,7 @@ def clip_value(x):
     else:
         return -10
 
+
 def retouch(y):
     for i in range(len(y)):
         if True:

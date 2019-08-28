@@ -43,10 +43,8 @@ print(result_dict.keys())
 for item in result_dict.keys():
     print(item,len(result_dict[item]))
 
-
 result_pd = pd.DataFrame(result_dict,columns=result_dict.keys())
 
 xlsx_path ='/home/wyz/PycharmProjects/self-criticism-network-based-multi-target--visual-navigation/output_record/my_architecture_roa.xlsx'
-
 
 result_pd.to_excel(xlsx_path)

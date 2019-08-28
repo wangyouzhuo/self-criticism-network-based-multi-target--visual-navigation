@@ -62,9 +62,10 @@ class AC_Net(object):
 
 
     def choose_action(self,s,t):
-        prob_weights = self.session.run(self.prob,
-                feed_dict={self.s: s[np.newaxis,:],self.t: t[np.newaxis, :]} )
-        action = np.random.choice(range(prob_weights.shape[1]),p=prob_weights.ravel())
+        # prob_weights = self.session.run(self.prob,
+        #         feed_dict={self.s: s[np.newaxis,:],self.t: t[np.newaxis, :]} )
+        # action = np.random.choice(range(prob_weights.shape[1]),p=prob_weights.ravel())
+        action = np.random.choice(range(4),p=[0.25,0.25,0.25,0.25])
         return action
 
 
@@ -132,7 +133,7 @@ if __name__ == '__main__':
 
         COORD = tf.train.Coordinator()
 
-        CURRENT_TARGETS_COUNT = 20
+        CURRENT_TARGETS_COUNT = 60
 
         weight_path = ROOT_PATH + '/weight/%s_Targets.ckpt'%CURRENT_TARGETS_COUNT
 
@@ -156,7 +157,8 @@ if __name__ == '__main__':
 
         COORD.join(evaluaters_threads)
         print('all over')
-        print(CURRENT_TARGETS_COUNT)
+        #print(CURRENT_TARGETS_COUNT)
+        print('RANDOM!!!')
         print(result_dict)
 
 

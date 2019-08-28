@@ -191,7 +191,11 @@ class ACNet(object):
 
                 self.loss = ENTROPY_BETA*self.glo_entropy + actor_loss - self.kl_beta*self.spe_actor_reg_loss
 
-                self.global_a_loss = tf.reduce_mean(-self.loss)
+                self.reg_loss = tf.contrib.layers.apply_regularization(tf.contrib.layers.l2_regularizer(0.5),self.global_a_params)
+
+                #self.global_a_loss = tf.reduce_mean(-self.loss )
+
+                self.global_a_loss = tf.reduce_mean(-self.loss + self.reg_loss)
 
 
     def _prepare_special_loss(self,scope):
