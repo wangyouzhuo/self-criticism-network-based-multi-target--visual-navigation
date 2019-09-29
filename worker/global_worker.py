@@ -68,7 +68,7 @@ class Glo_Worker(Worker):
                     kl_beta = _get_kl_beta()
                     #print("kl_beta: %6s     kl_list:%6s    kl_mean:%6s"%(round(kl_beta,4),round(count_list(kl_list),3),round(kl_mean,4)))
                     _reset_kl_list()
-
+                #kl_beta = 0  # 此处决定 soft-imitation learning loss是否起作用
                 if step_in_episode % UPDATE_GLOBAL_ITER == 0 or done:  # update global and assign to local net
                     buffer_v = self.AC.get_special_value(feed_dict={self.AC.s: buffer_s})
                     if done:

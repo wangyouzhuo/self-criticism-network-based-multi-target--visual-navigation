@@ -30,4 +30,3 @@ N_WORKERS            = 40
 device = '/gpu:0'
 
 
-

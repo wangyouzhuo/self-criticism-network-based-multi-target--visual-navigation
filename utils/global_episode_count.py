@@ -1,4 +1,6 @@
 from config.params import TARGET_ID_LIST
+from config.constant import *
+from config.params import *
 
 
 # ----------------------------------global count--------------------------------
@@ -181,7 +183,12 @@ def _decrease_kl_beta():
 
 def _get_kl_beta():
     global GLOBAL_KL_BETA
-    return GLOBAL_KL_BETA
+    if SOFT_LOSS_TYPE == "with_soft_imitation":
+        return GLOBAL_KL_BETA
+    elif SOFT_LOSS_TYPE == "no_soft_imitation":
+        return 0
+    elif SOFT_LOSS_TYPE == "hard_imitaion":
+        return 1
 
 #----------------------------------------------REWARD_ROA_SHOW------------------------------------------
 

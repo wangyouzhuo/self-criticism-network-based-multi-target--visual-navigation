@@ -4,6 +4,7 @@ import numpy as np
 from config.params import *
 from config.constant import *
 
+
 class ACNet(object):
     def __init__(self, scope,session,device,N_S,N_A,type,globalAC=None):
         tf.set_random_seed(50)
@@ -191,7 +192,10 @@ class ACNet(object):
 
                 self.loss = ENTROPY_BETA*self.glo_entropy + actor_loss - self.kl_beta*self.spe_actor_reg_loss
 
-                self.reg_loss = tf.contrib.layers.apply_regularization(tf.contrib.layers.l2_regularizer(0.5),self.global_a_params)
+                if SOFT_LOSS_TYPE == "hard_imitation":
+                    self.loss = -self.kl_beta*self.spe_actor_reg_loss
+
+                self.reg_loss = tf.contrib.layers.apply_regularization(tf.contrib.layers.l2_regularizer(L2_REG),self.global_a_params)
 
                 #self.global_a_loss = tf.reduce_mean(-self.loss )
 

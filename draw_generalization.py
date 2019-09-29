@@ -7,6 +7,7 @@ import numpy as np
 dict_target_20 = {320: 0.275, 193: 0.4  , 386: 0.154, 261: 0.356, 390: 1.0, 135: 0.363, 15: 0.162, 12: 0.165, 74: 0.287, 332: 0.225, 269: 0.366, 398: 1.0, 190: 0.389, 16: 0.194, 85: 0.334, 278: 0.35, 186: 0.382, 26: 0.202, 27: 0.164, 156: 0.29, 314: 0.346, 159: 0.267, 352: 0.203, 228: 0.261, 230: 0.253, 231: 0.264, 220: 0.356, 234: 0.243, 39: 0.18, 301: 0.221, 50: 0.217, 179: 0.377, 244: 0.366, 254: 0.31, 361: 0.13, 250: 0.388, 63: 0.173, 298: 0.24, 126: 0.333, 117: 0.381}
 list_target_20 = []
 
+
 dict_target_40 = {320: 0.282, 193: 0.411, 386: 0.168, 261: 0.379, 390: 1.0, 135: 0.343, 15: 0.161, 12: 0.169, 74: 0.275, 332: 0.204, 269: 0.372, 398: 1.0, 190: 0.391, 16: 0.185, 85: 0.331, 278: 0.361, 250: 0.385, 26: 0.21, 27: 0.173, 156: 0.278, 314: 0.346, 159: 0.274, 352: 0.19, 228: 0.237, 230: 0.242, 231: 0.233, 220: 0.339, 234: 0.253, 39: 0.175, 301: 0.205, 50: 0.222, 179: 0.405, 244: 0.36, 254: 0.319, 361: 0.144, 186: 0.384, 63: 0.188, 298: 0.213, 126: 0.321, 117: 0.367}
 list_target_40 = []
 
@@ -22,13 +23,14 @@ key_list = []
 
 print(len(dict_target_20.keys()))
 
-for key in dict_target_20.keys():
-    # if dict_target_60[key] >= dict_target_40[key] and dict_target_40[key] >= dict_target_20[key]:
-    #     if key != 361 and key != 314 and key != 190:
-    key_list.append(key)
+# for key in dict_target_20.keys():
+#     if dict_target_60[key] >= dict_target_40[key] or dict_target_40[key] >= dict_target_20[key]:
+#         #if key != 361 and key != 314 and key != 190:
+#         if dict_target_60[key]>0.3 and dict_target_40[key]>0.3 :
+#             key_list.append(key)
 
 
-print("选出来的target_id是：",key_list)
+
 
 #for key in key_list:
 for key in dict_target_20.keys():
@@ -38,7 +40,7 @@ for key in dict_target_20.keys():
     list_random.append(dict_random[key])
 
 
-distance_list = [item for item in range(len(key_list))]
+distance_list = [item for item in range(len(dict_target_20.keys()))]
 BAR_WIDTH = 0.2
 
 x1 = distance_list
@@ -64,7 +66,7 @@ plt.legend(prop = {'size':15})
 plt.xlabel('Untrained Target ID',fontsize = 20)
 plt.ylabel('Average Success Rate',fontsize = 20)
 #设置x轴刻度标签
-plt.xticks([item+BAR_WIDTH*0.5 for item in np.arange(len(key_list))],key_list)
+plt.xticks([item+BAR_WIDTH*0.5 for item in np.arange(len(dict_target_20.keys()))],dict_target_20.keys())
 plt.title('The success rate of network trained on different target quantity',fontsize = 20)
 plt.show()
 
