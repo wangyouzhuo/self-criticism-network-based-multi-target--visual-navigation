@@ -43,4 +43,6 @@ KL_MIN = 0.6
 WHE_STOP_SPECIAL = False
 
 
-SOFT_LOSS_TYPE = "with_soft_imitation"   #   no_soft_imitation    hard_imitaion
+SOFT_LOSS_TYPE = "with_soft_imitation"
+# SOFT_LOSS_TYPE = "no_soft_imitation"
+# SOFT_LOSS_TYPE = "hard_imitaion"

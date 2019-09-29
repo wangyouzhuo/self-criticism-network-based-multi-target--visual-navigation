@@ -100,12 +100,13 @@ if __name__ == "__main__":
 
     plt.show()
 
-    # filepath = '/home/wyz/PycharmProjects/self-criticism-network-based-multi-target--visual-navigation' \
-    #            '/output_record/my_architecture_result.csv'
-    # output_record(result_list=REWARD_SHOW_TRAIN,attribute_name='mean_rewards',
-    #               target_count=len(TARGET_ID_LIST),file_path=filepath)
-    #
-    # filepath = '/home/wyz/PycharmProjects/self-criticism-network-based-multi-target' \
-    #            '--visual-navigation/output_record/my_architecture_roa.csv'
-    # output_record(result_list=ROA_SHOW_TRAIN,attribute_name='mean_roa',
-    #           target_count=len(TARGET_ID_LIST),file_path=filepath)
+    filepath = '/home/wyz/PycharmProjects/self-criticism-network-based-multi-target--v' \
+               'isual-navigation/output_record/experiments_about_soft_imitation/'
+
+    reward_file = str(len(TARGET_ID_LIST)) + "_targets_" + SOFT_LOSS_TYPE + "_of_reward.csv"
+    output_record(result_list=REWARD_SHOW_TRAIN,attribute_name='mean_rewards',
+                  target_count=len(TARGET_ID_LIST),file_path=filepath+reward_file)
+
+    roa_file = str(len(TARGET_ID_LIST)) + "_targets_" + SOFT_LOSS_TYPE + "_of_roa.csv"
+    output_record(result_list=ROA_SHOW_TRAIN,attribute_name='mean_roa',
+              target_count=len(TARGET_ID_LIST),file_path=filepath+roa_file)
