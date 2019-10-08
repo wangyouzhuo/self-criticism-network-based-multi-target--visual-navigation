@@ -195,11 +195,11 @@ class ACNet(object):
                 if SOFT_LOSS_TYPE == "hard_imitation":
                     self.loss = -self.kl_beta*self.spe_actor_reg_loss
 
-                self.reg_loss = tf.contrib.layers.apply_regularization(tf.contrib.layers.l2_regularizer(L2_REG),self.global_a_params)
+                #self.reg_loss = tf.contrib.layers.apply_regularization(tf.contrib.layers.l2_regularizer(L2_REG),self.global_a_params)
 
-                #self.global_a_loss = tf.reduce_mean(-self.loss )
+                self.global_a_loss = tf.reduce_mean(-self.loss )
 
-                self.global_a_loss = tf.reduce_mean(-self.loss + self.reg_loss)
+                #self.global_a_loss = tf.reduce_mean(-self.loss + self.reg_loss)
 
 
     def _prepare_special_loss(self,scope):
