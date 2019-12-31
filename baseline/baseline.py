@@ -293,6 +293,7 @@ class Worker(object):
                                 BEST_DICT = self.experiment_one()
                             if len(GLOBAL_ROA) > 1:
                                 print(
+                                    "Baseline ! %s targets "%str(len(TARGET_ID_LIST)),
                                     "Epi:%5d" % GLOBAL_EP,
                                     "|| Success: %5s" % done,
                                     "|| Steps:%4d" % step_in_episode,
@@ -394,7 +395,7 @@ if __name__ == "__main__":
     plt.show()
 
     # result_list,attribute_name,target_id,file_path
-    path = '/home/wyz/PycharmProjects/self-criticism-network-based-multi-target--visual-navigation/output_record/baseline/'
+    path = ROOT_PATH + '/output_record/baseline/'
     roa_file_name    = path + str(len(TARGET_ID_LIST)) + "targets_roa_baseline.csv"
     reward_file_name = path + str(len(TARGET_ID_LIST)) + "targets_reward_baseline.csv"
     output_record(result_list=GLOBAL_ROA , attribute_name='mean_roa',

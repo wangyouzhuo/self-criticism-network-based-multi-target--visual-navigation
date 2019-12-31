@@ -4,12 +4,12 @@ import h5py
 import json
 import numpy as np
 import random
-import skimage.io
-from skimage.transform import resize
+# import skimage.io
+# from skimage.transform import resize
 import tensorflow as tf
 from config.constant import *
 from config.params import *
-import cv2
+import pandas as pd
 
 
 SCREEN_WIDTH = 84
@@ -17,6 +17,8 @@ SCREEN_HEIGHT = 84
 HISTORY_LENGTH = 4
 ACTION_SIZE = 4 # action size
 
+
+WHE_USE_RES_FEATURE = False
 
 # (300, 400, 3)
 
@@ -31,7 +33,7 @@ class THORDiscreteEnvironment(object):
     self.random_start        = config.get('random_start', True)
     self.random_terminal     = config.get('random_terminal',False)
 
-    self.terminal_state_id   = config.get('terminal_state_id', 406)
+    self.terminal_state_id   = config.get('terminal_state_id', None)
     self.start_state_id      = config.get('start_state_id',0)
     self.number_of_frames    = config.get('number_of_frames',1)
     self.whe_flatten         = config.get('flatten_or_not',True)
@@ -52,9 +54,15 @@ class THORDiscreteEnvironment(object):
     self.screen_height  = SCREEN_HEIGHT
     self.screen_width   = SCREEN_WIDTH
 
+    self.feature_data_path = ROOT_PATH + '/data/feature_encoded.csv'
+
     self.N_S = 2048   # [self.frame_seq, self.screen_size[0], self.screen_size[1]]
     self.N_A = 4
+    
+    self.prepare_feature_dict()
+
     self.reset_env()
+
 
   # public methods
 
@@ -71,6 +79,7 @@ class THORDiscreteEnvironment(object):
         random_start_id = random.randrange(self.n_locations)
         dist = self.shortest_path_distances[random_start_id][self.terminal_state_id]
         if dist > 0 and random_start_id!=self.terminal_state_id:
+          self.dist = dist
           break
       self.start_state_id = random_start_id
     else:
@@ -133,6 +142,13 @@ class THORDiscreteEnvironment(object):
         return -0.01
 
   # properties
+  def prepare_feature_dict(self):
+    data = pd.read_csv(self.feature_data_path)
+    self.feature_dict = dict()
+    for i in range(self.n_locations):
+      current_feature = data['State_'+str(i)].tolist()
+      self.feature_dict[i] = np.array(current_feature)
+
 
   @property
   def action_size(self):
@@ -162,7 +178,10 @@ class THORDiscreteEnvironment(object):
       return current_state
     else:
       curent_state = self.h5_file['resnet_feature'][self.current_state_id][0][:,np.newaxis].reshape([1,-1])[0]
-      return curent_state
+      if WHE_USE_RES_FEATURE:
+        return curent_state
+      else:
+        return self.feature_dict[self.current_state_id]
 
   @property
   def terminal_state(self):
@@ -170,7 +189,10 @@ class THORDiscreteEnvironment(object):
       terminal_state = self.h5_file['observation'][self.terminal_state_id].reshape(3, 300, 400)/255.0
       return terminal_state
     else:
-      return self.h5_file['resnet_feature'][self.terminal_state_id][0][:,np.newaxis].reshape([1,-1])[0]
+      if WHE_USE_RES_FEATURE:
+        return self.h5_file['resnet_feature'][self.terminal_state_id][0][:,np.newaxis].reshape([1,-1])[0]
+      else:
+        return self.feature_dict[self.terminal_state_id]
 
   #
   @property
@@ -217,7 +239,7 @@ def load_thor_env(scene_name,random_start,random_terminal,
         'whe_use_image':whe_use_image,
         'whether_show':whe_show,
         #'h5_file_path': ROOT_PATH + '/data/%s.h5'%scene_name,
-        'h5_file_path': '/home/wyz/PycharmProjects/distill_based_visual_navigation_in_indoor/' + '/data/%s.h5'%scene_name
+        'h5_file_path': DATA_PATH
         #-'h5_file_path': '/data1/wyz/PyProject/memory-based-visual-navigation'+'/data/%s.h5'%scene_name, # data path for my ubuntu server
 
     }

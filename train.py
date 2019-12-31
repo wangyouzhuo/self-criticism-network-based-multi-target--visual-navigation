@@ -22,6 +22,11 @@ from utils.op import *
 
 if __name__ == "__main__":
 
+    print("*************************************************************************************************")
+    print('***************************Train %s targets  ||  Whe use res-feature? %s  || Whe_many_goals:%s  ****************************'
+          %(str(len(TARGET_ID_LIST)),WHE_USE_RES_FEATURE,WHE_MANY_GOALS))
+    print('**************************************************************************************************')
+
     with tf.device(device):
 
         config = tf.ConfigProto(allow_soft_placement=True)
@@ -96,17 +101,25 @@ if __name__ == "__main__":
     plt.xlabel('hundred episodes')
     plt.ylabel('Total mean reward train!')
     title = 'Reward_%s_targets-my-net'%(len(TARGET_ID_LIST))
-    plt.title(title+now_time)
+    
 
-    plt.show()
+    info = "My_architecture||Targets:"+str(len(TARGET_ID_LIST)) + '||Whe_use_res_feature:'\
+           +str(WHE_USE_RES_FEATURE) + '||Whe_many_goals:'+str(WHE_MANY_GOALS)
 
-    filepath = '/home/wyz/PycharmProjects/self-criticism-network-based-multi-target--v' \
-               'isual-navigation/output_record/experiments_about_soft_imitation/'
+    filepath = ROOT_PATH+'/output_record/experiments_about_my_architecture/'
 
-    reward_file = str(len(TARGET_ID_LIST)) + "_targets_" + SOFT_LOSS_TYPE + "_of_reward.csv"
+    reward_file = info + "_Reward.csv"
+
+
+
     output_record(result_list=REWARD_SHOW_TRAIN,attribute_name='mean_rewards',
                   target_count=len(TARGET_ID_LIST),file_path=filepath+reward_file)
 
-    roa_file = str(len(TARGET_ID_LIST)) + "_targets_" + SOFT_LOSS_TYPE + "_of_roa.csv"
+    roa_file = info + "_Roa.csv"
+
     output_record(result_list=ROA_SHOW_TRAIN,attribute_name='mean_roa',
               target_count=len(TARGET_ID_LIST),file_path=filepath+roa_file)
+
+    plt.title(title+now_time)
+
+    plt.show()

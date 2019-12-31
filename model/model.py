@@ -57,7 +57,7 @@ class ACNet(object):
                 self.t = tf.placeholder(tf.float32, [None, self.dim_s], 'T')
 
                 self.adv      = tf.placeholder(tf.float32, [None,1], 'Advantage')
-                self.kl_beta  = tf.placeholder(tf.float32, [None,], 'KL_BETA')
+                # self.kl_beta  = tf.placeholder(tf.float32, [None,], 'KL_BETA')
 
                 self.OPT_A = tf.train.RMSPropOptimizer(LR_A, name='Glo_RMSPropA')
 
@@ -72,14 +72,13 @@ class ACNet(object):
 
                 self._prepare_global_grads(scope)
 
-                # self._prepare_special_update_op(scope)
                 self._prepare_global_update_op(scope)
 
                 self._prepare_global_pull_op(scope)
+
                 self._prepare_special_pull_op(scope)
 
-                self._prepare_kl_devergance(scope)
-
+                self._prepare_many_goal_loss_and_update()
 
     def _build_global_params_dict(self, scope):
         with tf.variable_scope(scope):
@@ -190,17 +189,9 @@ class ACNet(object):
 
                 self.glo_entropy = -tf.reduce_mean(self.global_a_prob*tf.log(self.global_a_prob + 1e-5), axis=1,keep_dims=True)  # encourage exploration
 
-                self.loss = ENTROPY_BETA*self.glo_entropy + actor_loss - self.kl_beta*self.spe_actor_reg_loss
-
-                if SOFT_LOSS_TYPE == "hard_imitation":
-                    self.loss = -self.kl_beta*self.spe_actor_reg_loss
-
-                #self.reg_loss = tf.contrib.layers.apply_regularization(tf.contrib.layers.l2_regularizer(L2_REG),self.global_a_params)
+                self.loss = ENTROPY_BETA*self.glo_entropy + actor_loss
 
                 self.global_a_loss = tf.reduce_mean(-self.loss )
-
-                #self.global_a_loss = tf.reduce_mean(-self.loss + self.reg_loss)
-
 
     def _prepare_special_loss(self,scope):
         with tf.name_scope(scope+'special_loss'):
@@ -217,13 +208,11 @@ class ACNet(object):
                 self.spe_exp_v = ENTROPY_BETA*self.spe_entropy + spe_exp_v
                 self.special_a_loss = tf.reduce_mean(-self.spe_exp_v)
 
-
     def _prepare_global_grads(self,scope):
         with tf.name_scope(scope+'global_grads'):
             with tf.name_scope('global_net_grad'):
                 self.global_a_grads = [tf.clip_by_norm(item, 40) for item in
                                        tf.gradients(self.global_a_loss, self.global_a_params)]
-
 
     def _prepare_special_grads(self,scope):
         with tf.name_scope(scope+'special_grads'):
@@ -233,16 +222,6 @@ class ACNet(object):
 
                 self.special_c_grads = [tf.clip_by_norm(item, 40) for item in
                                 tf.gradients(self.special_c_loss, self.special_c_params)]
-
-
-    def _prepare_kl_devergance(self,scope):
-        with tf.name_scope(scope+"kl_devergance"):
-            p_target = tf.stop_gradient(self.special_a_prob)
-            p_update = self.global_a_prob
-            self.kl = self.KL_divergence(p_stable=p_target, p_advance=p_update)
-            self.kl_mean = tf.reduce_mean(self.kl)
-
-
 
     def _prepare_global_update_op(self,scope):
         with tf.name_scope(scope+'_global_update'):
@@ -276,14 +255,13 @@ class ACNet(object):
                 self.pull_c_params_special_dict.update(kv_c)
 
 
-    def compute_kl(self,feed_dict):
-        special_logits,global_logits = self.session.run([self.special_logits,self.global_logits],feed_dict)
-        p_target,p_update = self.session.run([self.special_a_prob,self.global_a_prob],feed_dict)
-        kl = self.session.run(self.kl_mean,feed_dict=feed_dict)
-        if kl>1:
-            kl = 1
-        #print('special_logits:%s  global_logits:%s  kl:%s '%(special_logits,global_logits,kl))
-        return kl
+    def _prepare_many_goal_loss_and_update(self):
+        self.many_goal_loss =  -tf.reduce_mean(tf.one_hot(self.a,4,dtype=tf.float32)*
+                                tf.log(tf.clip_by_value(self.global_a_prob,1e-10,1.0)))
+        self.many_goal_grad = [tf.clip_by_norm(item, 40) for item in
+                               tf.gradients(self.many_goal_loss, self.global_a_params)]
+        self.update_may_goals_op = self.OPT_A.apply_gradients(list(zip(self.many_goal_grad, self.global_AC.global_a_params)))
+
 
     def update_special(self, feed_dict,target_id):  # run by a local
         self.session.run([self.update_special_a_dict[target_id],
@@ -291,6 +269,16 @@ class ACNet(object):
 
     def update_global(self,feed_dict):
         self.session.run(self.update_global_a_op, feed_dict)  # local grads applies to global net
+
+    def update_with_many_goals(self,current_state,next_state,action):
+        self.session.run(self.update_may_goals_op,feed_dict = {self.s:current_state[np.newaxis, :],
+                                                               self.t:next_state[np.newaxis, :],
+                                                               self.a:np.array([action])})
+        m_g_loss = self.session.run(self.many_goal_loss,feed_dict = {
+                                                               self.s:current_state[np.newaxis, :],
+                                                               self.t:next_state[np.newaxis, :],
+                                                               self.a:np.array([action])})
+        return m_g_loss
 
 
     def pull_global(self):
@@ -314,14 +302,6 @@ class ACNet(object):
 
     def load_weight(self,target_id):
         self.session.run([self.pull_a_params_special_dict[target_id],self.pull_c_params_special_dict[target_id]])
-
-
-    def KL_divergence(self,p_stable,p_advance):
-        X = tf.distributions.Categorical(probs = p_stable )
-        Y = tf.distributions.Categorical(probs = p_advance)
-        return tf.clip_by_value(tf.distributions.kl_divergence(X, Y), clip_value_min=0.0, clip_value_max=10)
-        #distance = tf.nn.l2_loss(p_stable-p_advance)
-        #return distance
 
 
     def get_special_value(self,feed_dict):

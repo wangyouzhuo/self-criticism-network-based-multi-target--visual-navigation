@@ -3,13 +3,12 @@
 ROOT_PATH = '/home/wyz/PycharmProjects/self-criticism-network-based-multi-target--visual-navigation/'
 
 # my_4card_server
-#ROOT_PATH = '/data1/wyz/PyProject/memory-based-visual-navigation/'
+# ROOT_PATH = '/data1/wyz/PyProject/self-criticism-network-based-multi-target--visual-navigation/'
 
 # my_mac
 #ROOT_PATH = '/user/wyz/PycharmProjects/distill_based_visual_navigation_in_indoor/'
 
-
-
+DATA_PATH = ROOT_PATH + "data/bedroom_04.h5"
 
 
 GAMMA                = 0.95
